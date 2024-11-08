@@ -1,0 +1,121 @@
+---
+---
+
+@import 'libs/vars';
+@import 'libs/functions';
+@import 'libs/mixins';
+@import 'libs/vendor';
+@import 'libs/breakpoints';
+@import 'academicons.min.css';
+@import 'https://fonts.googleapis.com/css?family=Josefin+Sans:300italic,600italic,300,600';
+@import 'https://use.fontawesome.com/releases/v5.15.2/css/all.css';
+
+/*
+	Dimension by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+*/
+
+// Breakpoints.
+
+	@include breakpoints((
+		xlarge:   ( 1281px,  1680px ),
+		large:    ( 981px,   1280px ),
+		medium:   ( 737px,   980px  ),
+		small:    ( 481px,   736px  ),
+		xsmall:   ( 361px,   480px  ),
+		xxsmall:  ( null,    360px  )
+	));
+
+// Base.
+
+	@import 'base/reset';
+	@import 'base/page';
+	@import 'base/typography';
+
+// Component.
+
+	@import 'components/form';
+	@import 'components/box';
+	@import 'components/icon';
+	@import 'components/image';
+	@import 'components/list';
+	@import 'components/actions';
+	@import 'components/icons';
+	@import 'components/table';
+	@import 'components/button';
+
+// Layout.
+
+	@import 'layout/bg';
+	@import 'layout/wrapper';
+	@import 'layout/header';
+	@import 'layout/main';
+	@import 'layout/footer';
+
+
+	
+/*****************/
+/* Figure styles */
+/*****************/
+
+.figure {
+	margin: auto;
+	text-align: center
+}
+
+
+.figure--frame .figure__inner {
+	padding: 20px;
+}
+
+.figure--caption .figure__inner {
+	padding-bottom: 10px;
+}
+
+.figure__inner {
+    display: inline-block;
+    /* background-image: url({{ site.baseurl }}/assets/images/loading.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 40px; */
+}
+
+.figure__inner--loaded {
+  background-image: none;
+}
+
+.figure__image {
+  display: block;
+  max-width:80%;
+  max-height:80%;
+  height: auto;
+  margin: auto;
+}
+
+.figure__caption {
+	font-size: 75%;
+  margin: auto;
+	margin-top: 10px;
+}
+
+	
+/*****************/
+/* Font-Awesome  */
+/*****************/
+
+.icon {
+	text-decoration: none;
+	border-bottom: none;
+	position: relative;
+  }
+  
+  .icon:before {
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-font-smoothing: antialiased;
+	font-family: "Font Awesome 5 Free", "Font Awesome 5 Brands", Academicons;
+	font-style: normal;
+	font-weight: normal;
+	font-size: 1.5em;
+	text-transform: none !important;
+  }

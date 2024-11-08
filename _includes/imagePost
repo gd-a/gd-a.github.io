@@ -1,0 +1,30 @@
+{% if include.frame == false %}
+	{% assign frame = false %}
+{% else %}
+	{% assign frame = true %}
+{% endif %}
+
+{% if page.id contains '#excerpt' %}
+	{% assign excerpt = 1 %}
+{% endif %}
+
+{% assign dirPath = page.id | remove_first: '/' | replace: '/', '-' | remove_first: '#excerpt' %}
+{% assign imagesPath = dirPath | prepend: '/images/posts/' | prepend: site.baseurl | append: '/' | append: include.name %}
+
+<figure class="figure {% if include.caption %}figure--caption{% endif %} {% if frame %}figure--frame{% endif %}">
+	<div class="figure__inner">
+      <img
+        class="figure__image"
+        onload="this.parentElement.classList += ' figure__inner--loaded'"
+        src="{{ imagesPath }}"
+        {% if include.alt %} alt="{{ include.alt }}" {% endif %}
+        {% if excerpt !=1 %}{% if include.width %} width="{{ include.width }}" {% endif %}{% endif %}
+				{% if excerpt == 1 %} style="max-width: 180px" style="max-height:180px" {% endif %}
+
+      />
+
+		{% if excerpt != 1 %}{% if include.caption %}
+			<figcaption class="figure__caption">{{ include.caption }}</figcaption>
+		{% endif %}{% endif %}
+	</div>
+</figure>

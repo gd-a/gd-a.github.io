@@ -1,0 +1,7 @@
+# Automatically generate a sitemap
+plugins:
+  - jekyll-sitemap
+
+sass:
+  style: compact # possible values: nested expanded compact compressed
+  sass_dir: assets/scss

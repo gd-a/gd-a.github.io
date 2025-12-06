@@ -6,8 +6,7 @@ permalink: /prairie/
 
 <div class="prairie-root">
 	<section class="prairie-progress" aria-labelledby="prairie-heading">
-		<!-- plus de <h1> : simple bloc de titre -->
-		<div id="prairie-heading" class="prairie-title">Prairie</div>
+		<h2 id="prairie-heading" class="prairie-sr-only">Progression du trajet Prairie</h2>
 
 		<div class="prairie-track" id="prairie-track" aria-hidden="false">
 			<!-- Ligne pointillée version sci-fi -->
@@ -40,6 +39,10 @@ permalink: /prairie/
 				<p id="prairie-journal-date" class="prairie-journal-date"></p>
 			</div>
 			<p class="prairie-journal-kicker">Feuille de route – édition spéciale</p>
+			<button type="button" id="prairie-journal-close" class="prairie-journal-close"
+				aria-label="Fermer le journal">
+				×
+			</button>
 		</header>
 
 		<div class="prairie-journal-layout">
@@ -73,10 +76,30 @@ permalink: /prairie/
 		color: #dddddd;
 	}
 
+	/* Masquer le H1 injecté par le layout et l’ancien titre visible */
+	main h1,
+	.page-title,
+	.prairie-title {
+		display: none !important;
+	}
+
 	.prairie-root {
 		min-height: 100vh;
 		display: flex;
 		flex-direction: column;
+	}
+
+	/* Texte uniquement pour lecteurs d’écran */
+	.prairie-sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 	}
 
 	/* Progression sur le tiers supérieur */
@@ -107,21 +130,21 @@ permalink: /prairie/
 		min-height: 90px;
 	}
 
-	/* Ligne pointillée futuriste (série de "capsules" arrondies) */
+	/* Ligne pointillée futuriste (série de "capsules" arrondies) – affinée pour matcher la barre */
 
 	.prairie-line {
 		position: absolute;
 		top: 50%;
 		left: 10%;
 		width: 80%;
-		height: 8px;
+		height: 4px;
 		transform: translateY(-50%);
 		background-image:
 			radial-gradient(circle,
 				rgba(190, 190, 190, 0.9) 0,
 				rgba(190, 190, 190, 0.9) 45%,
 				transparent 55%);
-		background-size: 24px 8px;
+		background-size: 24px 4px;
 		background-repeat: repeat-x;
 		opacity: 0.65;
 		border-radius: 999px;
@@ -150,13 +173,12 @@ permalink: /prairie/
 		transform: translateY(-50%);
 		height: 4px;
 		width: calc(var(--prairie-progress) * 100%);
-		background: linear-gradient(to left,
-				rgba(244, 138, 80, 0.95),
-				rgba(178, 220, 255, 0.95));
+		/* Gris uni, halo conservé */
+		background: rgba(200, 200, 200, 0.95);
 		border-radius: 999px;
 		box-shadow:
-			0 0 12px rgba(240, 160, 100, 0.7),
-			0 0 18px rgba(160, 210, 255, 0.7);
+			0 0 8px rgba(220, 220, 220, 0.9),
+			0 0 14px rgba(220, 220, 220, 0.6);
 	}
 
 	/* Cercles d'extrémité */
@@ -194,7 +216,7 @@ permalink: /prairie/
 			0 0 22px rgba(255, 136, 76, 0.6);
 	}
 
-	/* Curseur légèrement plus petit, avec halo pulsé en doubles vagues fines */
+	/* Curseur simplifié (couleur unie), pulsations plus larges */
 
 	.prairie-pointer {
 		position: absolute;
@@ -206,9 +228,8 @@ permalink: /prairie/
 		min-width: 18px;
 		min-height: 18px;
 		border-radius: 50%;
-		background: radial-gradient(circle at 30% 30%, #f9f9f9 0, #cacaca 38%, #6c6c6c 80%);
-		border: 3px solid #f3f3f3;
-		/* bordure légèrement plus large que les milestones */
+		background: #d8d8d8;
+		border: 2px solid #f0f0f0;
 		transform: translate(-50%, -50%);
 		z-index: 3;
 		overflow: visible;
@@ -242,7 +263,7 @@ permalink: /prairie/
 		}
 
 		70% {
-			transform: scale(1.9);
+			transform: scale(3.4);
 			opacity: 0;
 		}
 
@@ -258,7 +279,7 @@ permalink: /prairie/
 		}
 
 		60% {
-			transform: scale(1.9);
+			transform: scale(2.6);
 			opacity: 0;
 		}
 
@@ -358,6 +379,27 @@ permalink: /prairie/
 		border-bottom: 1px solid #d1c3a7;
 		padding-bottom: 0.75rem;
 		margin-bottom: 1.5rem;
+		position: relative;
+	}
+
+	/* Bouton de fermeture (croix) en haut à droite */
+
+	.prairie-journal-close {
+		position: absolute;
+		top: 0.2rem;
+		right: 0.2rem;
+		background: transparent;
+		border: none;
+		font-size: 1.1rem;
+		line-height: 1;
+		cursor: pointer;
+		color: #7c6a4d;
+		padding: 0.1rem 0.3rem;
+	}
+
+	.prairie-journal-close:hover,
+	.prairie-journal-close:focus-visible {
+		color: #3b2c1c;
 	}
 
 	.prairie-journal-header h2 {
@@ -431,6 +473,8 @@ permalink: /prairie/
 	.prairie-journal-secondary p {
 		margin: 0 0 0.7rem;
 	}
+
+
 
 	.prairie-journal-secondary::after {
 		/* effet "il faut tourner la page" */
@@ -553,6 +597,8 @@ permalink: /prairie/
 			);
 
 			// Mise à jour de la légende (date courante + distance)
+
+
 			const dateLabel = document.getElementById("prairie-date-label");
 			const distanceLabel = document.getElementById("prairie-distance-label");
 
@@ -642,6 +688,8 @@ permalink: /prairie/
 			if (!track) return;
 
 			milestoneConfig.forEach((ms) => {
+
+
 				const button = document.createElement("button");
 				button.type = "button";
 				button.className = "prairie-milestone";
@@ -695,10 +743,28 @@ permalink: /prairie/
 			});
 		}
 
+		function closeJournal() {
+			const journal = document.getElementById("prairie-journal");
+			if (journal) {
+
+
+				journal.classList.add("prairie-journal--hidden");
+			}
+			const allMilestones = document.querySelectorAll(".prairie-milestone");
+			allMilestones.forEach((el) => {
+				el.classList.remove("prairie-milestone--active");
+			});
+		}
+
 		// Initialisation
 		document.addEventListener("DOMContentLoaded", function () {
 			createMilestones();
 			updateProgress();
+
+			const closeBtn = document.getElementById("prairie-journal-close");
+			if (closeBtn) {
+				closeBtn.addEventListener("click", closeJournal);
+			}
 
 			// Si tu veux que la progression se mette à jour automatiquement
 			// tant que la page reste ouverte, tu peux décommenter :

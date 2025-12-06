@@ -4,600 +4,589 @@ title: Prairial
 permalink: /prairial/
 ---
 
-<!--
-  Page Prairial - ligne de progression
-  Auteur : Daniel Calbick
-  Date   : 2025-12-06
--->
-
 <div class="prairial-root">
-  <section class="prairial-progress" aria-labelledby="prairial-heading">
-    <h1 id="prairial-heading" class="prairial-title">Prairial</h1>
+	<section class="prairial-progress" aria-labelledby="prairial-heading">
+		<h1 id="prairial-heading" class="prairial-title">Prairial</h1>
 
-    <div class="prairial-track" id="prairial-track" aria-hidden="false">
-      <!-- Ligne pointillée -->
-      <div class="prairial-line" aria-hidden="true"></div>
+		<div class="prairial-track" id="prairial-track" aria-hidden="false">
+			<!-- Ligne pointillée -->
+			<div class="prairial-line" aria-hidden="true"></div>
 
-      <!-- Extrémités -->
-      <div class="prairial-endpoint prairial-endpoint--left" aria-label="Arrivée"></div>
-      <div class="prairial-endpoint prairial-endpoint--right" aria-label="Départ"></div>
+			<!-- Extrémités -->
+			<div class="prairial-endpoint prairial-endpoint--left" aria-label="Arrivée"></div>
+			<div class="prairial-endpoint prairial-endpoint--right" aria-label="Départ"></div>
 
-      <!-- Curseur -->
-      <div class="prairial-pointer"
-           id="prairial-pointer"
-           aria-label="Position actuelle sur le trajet"></div>
+			<!-- Curseur -->
+			<div class="prairial-pointer" id="prairial-pointer" aria-label="Position actuelle sur le trajet"></div>
 
-      <!-- Jalons injectés via JavaScript -->
-    </div>
+			<!-- Jalons injectés via JavaScript -->
+		</div>
 
-    <div class="prairial-legend">
-      <span id="prairial-date-label"></span>
-      <span id="prairial-distance-label"></span>
-    </div>
-  </section>
+		<div class="prairial-legend">
+			<span id="prairial-date-label"></span>
+			<span id="prairial-distance-label"></span>
+		</div>
+	</section>
 
-  <!-- Bloc "vieux journal" -->
-  <section id="prairial-journal"
-           class="prairial-journal prairial-journal--hidden"
-           aria-live="polite">
-    <header class="prairial-journal-header">
-      <div>
-        <h2 id="prairial-journal-title"></h2>
-        <p id="prairial-journal-date" class="prairial-journal-date"></p>
-      </div>
-      <p class="prairial-journal-kicker">Feuille de route – édition spéciale</p>
-    </header>
+	<!-- Bloc "vieux journal" -->
+	<section id="prairial-journal" class="prairial-journal prairial-journal--hidden" aria-live="polite">
+		<header class="prairial-journal-header">
+			<div>
+				<h2 id="prairial-journal-title"></h2>
+				<p id="prairial-journal-date" class="prairial-journal-date"></p>
+			</div>
+			<p class="prairial-journal-kicker">Feuille de route – édition spéciale</p>
+		</header>
 
-    <div class="prairial-journal-layout">
-      <!-- Colonne principale (article sur deux colonnes + extrait) -->
-      <div class="prairial-journal-main">
-        <div id="prairial-journal-main-article"
-             class="prairial-journal-main-article"></div>
-        <div id="prairial-journal-secondary"
-             class="prairial-journal-secondary"></div>
-      </div>
+		<div class="prairial-journal-layout">
+			<!-- Colonne principale (article sur deux colonnes + extrait) -->
+			<div class="prairial-journal-main">
+				<div id="prairial-journal-main-article" class="prairial-journal-main-article"></div>
+				<div id="prairial-journal-secondary" class="prairial-journal-secondary"></div>
+			</div>
 
-      <!-- Colonne édito (1/5 environ) -->
-      <aside class="prairial-journal-editorial">
-        <h3 class="prairial-journal-editorial-title">Édito</h3>
-        <div id="prairial-journal-editorial-content"></div>
-      </aside>
-    </div>
-  </section>
+			<!-- Colonne édito (1/5 environ) -->
+			<aside class="prairial-journal-editorial">
+				<h3 class="prairial-journal-editorial-title">Édito</h3>
+				<div id="prairial-journal-editorial-content"></div>
+			</aside>
+		</div>
+	</section>
 </div>
 
 <style>
-/* === Styles Prairial — Auteur: Daniel Calbick — 2025-12-06 === */
+	:root {
+		/* 0 = départ (cercle rouge à droite), 1 = arrivée (cercle bleu à gauche) */
+		--prairial-progress: 0;
+	}
 
-:root {
-  /* 0 = départ (cercle rouge à droite), 1 = arrivée (cercle bleu à gauche) */
-  --prairial-progress: 0;
-}
+	body {
+		margin: 0;
+		padding: 0;
+		background: #fdf9f0;
+	}
 
-body {
-  margin: 0;
-  padding: 0;
-  background: #fdf9f0;
-}
+	.prairial-root {
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+	}
 
-.prairial-root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+	/* Progression sur le tiers supérieur */
 
-/* Progression sur le tiers supérieur */
+	.prairial-progress {
+		max-width: 1200px;
+		margin: 6vh auto 2vh;
+		padding: 0 6vw;
+	}
 
-.prairial-progress {
-  max-width: 1200px;
-  margin: 6vh auto 2vh;
-  padding: 0 6vw;
-}
+	.prairial-title {
+		margin: 0 0 2vh;
+		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		font-weight: 500;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		font-size: 0.9rem;
+		color: #555;
+	}
 
-.prairial-title {
-  margin: 0 0 2vh;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 0.9rem;
-  color: #555;
-}
+	.prairial-track {
+		position: relative;
+		height: 12vh;
+		min-height: 90px;
+	}
 
-.prairial-track {
-  position: relative;
-  height: 12vh;
-  min-height: 90px;
-}
+	/* Ligne pointillée */
 
-/* Ligne pointillée */
+	.prairial-line {
+		position: absolute;
+		top: 50%;
+		left: 10%;
+		right: 10%;
+		border-top: 6px dotted #b7b7b7;
+		transform: translateY(-50%);
+		z-index: 0;
+	}
 
-.prairial-line {
-  position: absolute;
-  top: 50%;
-  left: 10%;
-  right: 10%;
-  border-top: 6px dotted #b7b7b7;
-  transform: translateY(-50%);
-  z-index: 0;
-}
+	/* Cercles d'extrémité */
 
-/* Cercles d'extrémité */
+	.prairial-endpoint {
+		position: absolute;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		border-radius: 50%;
+	}
 
-.prairial-endpoint {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-}
+	.prairial-endpoint--left {
+		left: 10%;
+		width: 1.5vw;
+		height: 1.5vw;
+		min-width: 20px;
+		min-height: 20px;
+		background: #0b3c7d;
+		/* bleu foncé */
+		box-shadow: 0 0 0 3px rgba(5, 26, 56, 0.25);
+	}
 
-.prairial-endpoint--left {
-  left: 10%;
-  width: 1.5vw;
-  height: 1.5vw;
-  min-width: 20px;
-  min-height: 20px;
-  background: #0b3c7d; /* bleu foncé */
-  box-shadow: 0 0 0 3px rgba(5, 26, 56, 0.25);
-}
+	.prairial-endpoint--right {
+		left: 90%;
+		width: 1vw;
+		height: 1vw;
+		min-width: 16px;
+		min-height: 16px;
+		background: #e86a3c;
+		/* rouge/orangé */
+		box-shadow: 0 0 0 3px rgba(138, 46, 17, 0.25);
+	}
 
-.prairial-endpoint--right {
-  left: 90%;
-  width: 1vw;
-  height: 1vw;
-  min-width: 16px;
-  min-height: 16px;
-  background: #e86a3c; /* rouge/orangé */
-  box-shadow: 0 0 0 3px rgba(138, 46, 17, 0.25);
-}
+	/* Curseur avec effet pulse */
 
-/* Curseur avec effet pulse */
+	.prairial-pointer {
+		position: absolute;
+		top: 50%;
+		/* progression de droite (rouge) vers gauche (bleu) */
+		left: calc(10% + (1 - var(--prairial-progress)) * 80%);
+		width: 1.8vw;
+		height: 1.8vw;
+		min-width: 24px;
+		min-height: 24px;
+		border-radius: 50%;
+		background: #d3d3d3;
+		border: 3px solid #f6f6f6;
+		transform: translate(-50%, -50%);
+		box-shadow: 0 0 0 0 rgba(150, 150, 150, 0.6);
+		animation: prairialPulse 2.6s infinite;
+		transition: left 1.2s ease-out;
+		z-index: 2;
+	}
 
-.prairial-pointer {
-  position: absolute;
-  top: 50%;
-  /* progression de droite (rouge) vers gauche (bleu) */
-  left: calc(10% + (1 - var(--prairial-progress)) * 80%);
-  width: 1.8vw;
-  height: 1.8vw;
-  min-width: 24px;
-  min-height: 24px;
-  border-radius: 50%;
-  background: #d3d3d3;
-  border: 3px solid #f6f6f6;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 0 rgba(150, 150, 150, 0.6);
-  animation: prairialPulse 2.6s infinite;
-  transition: left 1.2s ease-out;
-  z-index: 2;
-}
+	@keyframes prairialPulse {
+		0% {
+			box-shadow: 0 0 0 0 rgba(150, 150, 150, 0.6);
+			transform: translate(-50%, -50%) scale(1);
+		}
 
-@keyframes prairialPulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(150, 150, 150, 0.6);
-    transform: translate(-50%, -50%) scale(1);
-  }
-  70% {
-    box-shadow: 0 0 0 18px rgba(150, 150, 150, 0);
-    transform: translate(-50%, -50%) scale(1.05);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(150, 150, 150, 0);
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
+		70% {
+			box-shadow: 0 0 0 18px rgba(150, 150, 150, 0);
+			transform: translate(-50%, -50%) scale(1.05);
+		}
 
-/* Jalons (milestones) */
+		100% {
+			box-shadow: 0 0 0 0 rgba(150, 150, 150, 0);
+			transform: translate(-50%, -50%) scale(1);
+		}
+	}
 
-.prairial-milestone {
-  --prairial-position: 0;
-  position: absolute;
-  top: 50%;
-  /* même interpolation droite → gauche */
-  left: calc(10% + (1 - var(--prairial-position)) * 80%);
-  transform: translate(-50%, -50%);
-  width: 0.35vw;
-  height: 0.35vw;
-  min-width: 12px;
-  min-height: 12px;
-  border-radius: 50%;
-  border: 2px solid #f9ebcf; /* bordure crème */
-  background: #9e9e9e;
-  cursor: pointer;
-  z-index: 3;
-  padding: 0;
-  outline: none;
-}
+	/* Jalons (milestones) */
 
-/* petite "tige" verticale */
+	.prairial-milestone {
+		--prairial-position: 0;
+		position: absolute;
+		top: 50%;
+		/* même interpolation droite → gauche */
+		left: calc(10% + (1 - var(--prairial-position)) * 80%);
+		transform: translate(-50%, -50%);
+		width: 0.35vw;
+		height: 0.35vw;
+		min-width: 12px;
+		min-height: 12px;
+		border-radius: 50%;
+		border: 2px solid #f9ebcf;
+		/* bordure crème */
+		background: #9e9e9e;
+		cursor: pointer;
+		z-index: 3;
+		padding: 0;
+		outline: none;
+	}
 
-.prairial-milestone::after {
-  content: "";
-  position: absolute;
-  top: -7px;
-  left: 50%;
-  width: 1px;
-  height: 7px;
-  transform: translateX(-50%);
-  background: #6d6d6d;
-}
+	/* petite "tige" verticale */
 
-.prairial-milestone:hover,
-.prairial-milestone:focus-visible {
-  background: #e0e0e0;
-  box-shadow: 0 0 0 6px rgba(249, 235, 207, 0.7);
-}
+	.prairial-milestone::after {
+		content: "";
+		position: absolute;
+		top: -7px;
+		left: 50%;
+		width: 1px;
+		height: 7px;
+		transform: translateX(-50%);
+		background: #6d6d6d;
+	}
 
-.prairial-milestone--active {
-  background: #f9ebcf;
-}
+	.prairial-milestone:hover,
+	.prairial-milestone:focus-visible {
+		background: #e0e0e0;
+		box-shadow: 0 0 0 6px rgba(249, 235, 207, 0.7);
+	}
 
-/* Légende (date + distance) */
+	.prairial-milestone--active {
+		background: #f9ebcf;
+	}
 
-.prairial-legend {
-  margin-top: 0.8rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 0.85rem;
-  color: #555;
-}
+	/* Légende (date + distance) */
 
-.prairial-legend span {
-  white-space: nowrap;
-}
+	.prairial-legend {
+		margin-top: 0.8rem;
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		font-size: 0.85rem;
+		color: #555;
+	}
 
-/* Journal style vieux papier */
+	.prairial-legend span {
+		white-space: nowrap;
+	}
 
-.prairial-journal {
-  max-width: 960px;
-  margin: 4vh auto 10vh;
-  padding: 2.5rem 2.25rem 2.75rem;
-  background: #f4ead4;
-  border-radius: 4px;
-  box-shadow:
-    0 16px 28px rgba(0, 0, 0, 0.18),
-    0 0 0 1px rgba(104, 86, 54, 0.35);
-  font-family: "Georgia", "Times New Roman", serif;
-  color: #30251a;
-}
+	/* Journal style vieux papier */
 
-.prairial-journal--hidden {
-  display: none;
-}
+	.prairial-journal {
+		max-width: 960px;
+		margin: 4vh auto 10vh;
+		padding: 2.5rem 2.25rem 2.75rem;
+		background: #f4ead4;
+		border-radius: 4px;
+		box-shadow:
+			0 16px 28px rgba(0, 0, 0, 0.18),
+			0 0 0 1px rgba(104, 86, 54, 0.35);
+		font-family: "Georgia", "Times New Roman", serif;
+		color: #30251a;
+	}
 
-.prairial-journal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  border-bottom: 1px solid #d0c0a0;
-  padding-bottom: 0.75rem;
-  margin-bottom: 1.5rem;
-}
+	.prairial-journal--hidden {
+		display: none;
+	}
 
-.prairial-journal-header h2 {
-  margin: 0;
-  font-size: 1.6rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
+	.prairial-journal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-end;
+		border-bottom: 1px solid #d0c0a0;
+		padding-bottom: 0.75rem;
+		margin-bottom: 1.5rem;
+	}
 
-.prairial-journal-date {
-  margin: 0.25rem 0 0;
-  font-size: 0.85rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #7c6a4d;
-}
+	.prairial-journal-header h2 {
+		margin: 0;
+		font-size: 1.6rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
 
-.prairial-journal-kicker {
-  margin: 0;
-  font-size: 0.8rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #8a7451;
-}
+	.prairial-journal-date {
+		margin: 0.25rem 0 0;
+		font-size: 0.85rem;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: #7c6a4d;
+	}
 
-.prairial-journal-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 4fr) minmax(0, 1fr);
-  column-gap: 2.25rem;
-}
+	.prairial-journal-kicker {
+		margin: 0;
+		font-size: 0.8rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: #8a7451;
+	}
 
-/* Article principal sur deux colonnes */
+	.prairial-journal-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 4fr) minmax(0, 1fr);
+		column-gap: 2.25rem;
+	}
 
-.prairial-journal-main-article {
-  font-size: 0.96rem;
-  line-height: 1.7;
-  column-count: 2;
-  column-gap: 2rem;
-  text-align: justify;
-}
+	/* Article principal sur deux colonnes */
 
-.prairial-journal-main-article p {
-  margin: 0 0 0.9rem;
-}
+	.prairial-journal-main-article {
+		font-size: 0.96rem;
+		line-height: 1.7;
+		column-count: 2;
+		column-gap: 2rem;
+		text-align: justify;
+	}
 
-/* Extrait d’article secondaire (coupé) */
+	.prairial-journal-main-article p {
+		margin: 0 0 0.9rem;
+	}
 
-.prairial-journal-secondary {
-  margin-top: 1.6rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #d0c0a0;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  text-align: justify;
-  position: relative;
-}
+	/* Extrait d’article secondaire (coupé) */
 
-.prairial-journal-secondary::after {
-  /* effet "il faut tourner la page" */
-  content: "…";
-  position: absolute;
-  right: 0;
-  bottom: -0.4rem;
-  font-weight: bold;
-  font-size: 1.1rem;
-}
+	.prairial-journal-secondary {
+		margin-top: 1.6rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid #d0c0a0;
+		font-size: 0.9rem;
+		line-height: 1.6;
+		text-align: justify;
+		position: relative;
+	}
 
-/* Colonne édito ~1/5 */
+	.prairial-journal-secondary::after {
+		/* effet "il faut tourner la page" */
+		content: "…";
+		position: absolute;
+		right: 0;
+		bottom: -0.4rem;
+		font-weight: bold;
+		font-size: 1.1rem;
+	}
 
-.prairial-journal-editorial {
-  border-left: 1px solid #d0c0a0;
-  padding-left: 1.4rem;
-  font-size: 0.88rem;
-  line-height: 1.6;
-}
+	/* Colonne édito ~1/5 */
 
-.prairial-journal-editorial-title {
-  margin: 0 0 0.6rem;
-  font-size: 0.9rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #7c6a4d;
-}
+	.prairial-journal-editorial {
+		border-left: 1px solid #d0c0a0;
+		padding-left: 1.4rem;
+		font-size: 0.88rem;
+		line-height: 1.6;
+	}
 
-.prairial-journal-editorial p {
-  margin: 0 0 0.8rem;
-}
+	.prairial-journal-editorial-title {
+		margin: 0 0 0.6rem;
+		font-size: 0.9rem;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: #7c6a4d;
+	}
 
-/* Adaptation responsive */
+	.prairial-journal-editorial p {
+		margin: 0 0 0.8rem;
+	}
 
-@media (max-width: 900px) {
-  .prairial-journal-layout {
-    grid-template-columns: 1fr;
-    row-gap: 1.75rem;
-  }
+	/* Adaptation responsive */
 
-  .prairial-journal-editorial {
-    border-left: none;
-    border-top: 1px solid #d0c0a0;
-    padding-left: 0;
-    padding-top: 1rem;
-  }
+	@media (max-width: 900px) {
+		.prairial-journal-layout {
+			grid-template-columns: 1fr;
+			row-gap: 1.75rem;
+		}
 
-  .prairial-journal-main-article {
-    column-count: 1;
-  }
-}
+		.prairial-journal-editorial {
+			border-left: none;
+			border-top: 1px solid #d0c0a0;
+			padding-left: 0;
+			padding-top: 1rem;
+		}
 
-@media (max-width: 600px) {
-  .prairial-progress {
-    margin-top: 5vh;
-    padding-inline: 4vw;
-  }
+		.prairial-journal-main-article {
+			column-count: 1;
+		}
+	}
 
-  .prairial-track {
-    min-height: 80px;
-  }
+	@media (max-width: 600px) {
+		.prairial-progress {
+			margin-top: 5vh;
+			padding-inline: 4vw;
+		}
 
-  .prairial-legend {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
+		.prairial-track {
+			min-height: 80px;
+		}
+
+		.prairial-legend {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+	}
 </style>
 
 <script>
-// === Logique Prairial — Auteur: Daniel Calbick — 2025-12-06 ===
 
-(function () {
-  // Dates clés du trajet (en UTC pour éviter les surprises de fuseaux)
-  function utcDate(year, month, day) {
-    // month = 1–12
-    return new Date(Date.UTC(year, month - 1, day));
-  }
+	(function () {
+		// Dates clés du trajet (en UTC pour éviter les surprises de fuseaux)
+		function utcDate(year, month, day) {
+			// month = 1–12
+			return new Date(Date.UTC(year, month - 1, day));
+		}
 
-  const startDate = utcDate(2025, 9, 1);  // 1er septembre 2025
-  const endDate   = utcDate(2026, 6, 1);  // 1er juin 2026
+		const startDate = utcDate(2025, 9, 1);  // 1er septembre 2025
+		const endDate = utcDate(2026, 6, 1);  // 1er juin 2026
 
-  // Distance totale représentée par les pointillés
-  const totalDistanceKm = 363.83e6;
+		// Distance totale représentée par les pointillés
+		const totalDistanceKm = 363.83e6;
 
-  // Pour figer la progression à une date donnée :
-  // mets USE_MANUAL_DATE = true et adapte MANUAL_DATE.
-  const USE_MANUAL_DATE = false;
-  const MANUAL_DATE = utcDate(2025, 12, 6); // exemple
+		// Pour figer la progression à une date donnée :
+		// mets USE_MANUAL_DATE = true et adapte MANUAL_DATE.
+		const USE_MANUAL_DATE = false;
+		const MANUAL_DATE = utcDate(2025, 12, 6); // exemple
 
-  const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
+		const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
+			day: "numeric",
+			month: "long",
+			year: "numeric"
+		});
 
-  const numberFormatter = new Intl.NumberFormat("fr-FR", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1
-  });
+		const numberFormatter = new Intl.NumberFormat("fr-FR", {
+			minimumFractionDigits: 1,
+			maximumFractionDigits: 1
+		});
 
-  function progressFor(date) {
-    const total = endDate.getTime() - startDate.getTime();
-    if (total <= 0) return 0;
+		function progressFor(date) {
+			const total = endDate.getTime() - startDate.getTime();
+			if (total <= 0) return 0;
 
-    let elapsed = date.getTime() - startDate.getTime();
-    if (elapsed < 0) elapsed = 0;
-    if (elapsed > total) elapsed = total;
+			let elapsed = date.getTime() - startDate.getTime();
+			if (elapsed < 0) elapsed = 0;
+			if (elapsed > total) elapsed = total;
 
-    return elapsed / total; // 0 → départ (rouge), 1 → arrivée (bleu)
-  }
+			return elapsed / total; // 0 → départ (rouge), 1 → arrivée (bleu)
+		}
 
-  function updateProgress() {
-    const now = USE_MANUAL_DATE ? MANUAL_DATE : new Date();
-    const progress = progressFor(now);
+		function updateProgress() {
+			const now = USE_MANUAL_DATE ? MANUAL_DATE : new Date();
+			const progress = progressFor(now);
 
-    // Mise à jour de la variable CSS pour la position du curseur
-    document.documentElement.style.setProperty(
-      "--prairial-progress",
-      progress.toString()
-    );
+			// Mise à jour de la variable CSS pour la position du curseur
+			document.documentElement.style.setProperty(
+				"--prairial-progress",
+				progress.toString()
+			);
 
-    // Mise à jour de la légende (date courante + distance)
-    const dateLabel = document.getElementById("prairial-date-label");
-    const distanceLabel = document.getElementById("prairial-distance-label");
+			// Mise à jour de la légende (date courante + distance)
+			const dateLabel = document.getElementById("prairial-date-label");
+			const distanceLabel = document.getElementById("prairial-distance-label");
 
-    if (dateLabel) {
-      dateLabel.textContent = "Aujourd’hui : " + dateFormatter.format(now);
-    }
+			if (dateLabel) {
+				dateLabel.textContent = "Aujourd’hui : " + dateFormatter.format(now);
+			}
 
-    if (distanceLabel) {
-      const traveledKm = totalDistanceKm * progress;
-      const traveledMillions = traveledKm / 1e6;
-      const totalMillions = totalDistanceKm / 1e6;
+			if (distanceLabel) {
+				const traveledKm = totalDistanceKm * progress;
+				const traveledMillions = traveledKm / 1e6;
+				const totalMillions = totalDistanceKm / 1e6;
 
-      distanceLabel.textContent =
-        numberFormatter.format(traveledMillions) +
-        " / " +
-        numberFormatter.format(totalMillions) +
-        " millions de km";
-    }
-  }
+				distanceLabel.textContent =
+					numberFormatter.format(traveledMillions) +
+					" / " +
+					numberFormatter.format(totalMillions) +
+					" millions de km";
+			}
+		}
 
-  // Configuration des jalons/milestones
-  const milestoneConfig = [
-    {
-      id: "ms-2025-09-26",
-      date: utcDate(2025, 9, 26),
-      label: "26 septembre 2025",
-      title: "Gazette interplanétaire",
-      main: `
+		// Configuration des jalons/milestones
+		const milestoneConfig = [
+			{
+				id: "ms-2025-09-26",
+				date: utcDate(2025, 9, 26),
+				label: "26 septembre 2025",
+				title: "Gazette interplanétaire",
+				main: `
         <p>Ce matin-là, les cadrans indiquaient à peine l’équinoxe que déjà les regards se tournaient vers la trajectoire. Sur le papier, tout semblait figé : neuf mois de route, des millions de kilomètres, et pourtant une impression étrange de glissement continu, comme si le temps lui-même se laissait lentement étirer.</p>
         <p>Les premiers rapports mentionnent un calme presque suspect. Aucune turbulence notable, seulement la mécanique silencieuse d’un voyage bien préparé. Mais entre les lignes, on devine déjà les infimes décalages, ces gestes anodins qui, un jour, feront récit : une note griffonnée au verso, un calcul rectifié, un soupir retenu devant un écran trop lumineux.</p>
         <p>Pour l’instant, les chronomètres avancent en cadence, et l’on se surprend à écouter le souffle discret de la machine. Le départ est derrière, l’arrivée demeure compacte, lointaine. Entre les deux, une simple promesse : le ruban gris d’un trajet qui commence à peine à se dérouler.</p>
       `,
-      secondary: `
+				secondary: `
         <p>Dans la marge d’un carnet, quelqu’un a tracé une petite orbite excentrée. Rien d’officiel, bien sûr, juste une hypothèse notée à la hâte : et si la route, au lieu d’être un trait, était déjà un souvenir en train de se réécrire&nbsp;?</p>
       `,
-      editorial: `
+				editorial: `
         <p>On pourrait croire que le voyage ne commence qu’au moment où l’on quitte le bord. C’est un réflexe compréhensible : l’esprit aime les ruptures nettes, les départs théâtraux, les compte-à-rebours solennels.</p>
         <p>Mais la vérité est plus discrète. Le voyage a souvent débuté bien avant que la machine ne s’ébranle, dans ces instants où l’on hésite encore à appuyer sur «&nbsp;lancer&nbsp;». À partir de là, chaque jour compte, même si rien ne semble bouger.</p>
       `
-    },
-    {
-      id: "ms-2025-12-01",
-      date: utcDate(2025, 12, 1),
-      label: "1 décembre 2025",
-      title: "Chronique en saison froide",
-      main: `
+			},
+			{
+				id: "ms-2025-12-01",
+				date: utcDate(2025, 12, 1),
+				label: "1 décembre 2025",
+				title: "Chronique en saison froide",
+				main: `
         <p>Avec l’entrée dans les jours les plus courts, la progression n’en paraît que plus abstraite. Les chiffres s’alignent pourtant avec une précision obstinée : des millions de kilomètres déjà franchis, un pourcentage qui grimpe, lentement, vers l’horizon du printemps.</p>
         <p>Dans les rapports, on évoque la monotonie apparente du trajet. Ce n’est ni un drame, ni une épopée, mais quelque chose de plus subtil : une patience organisée. On vérifie les instruments, on recale les horloges, on guette les infimes écarts comme on écouterait une note légèrement fausse dans une mélodie répétée.</p>
         <p>À cette étape, il devient clair que la route n’est pas qu’une distance à parcourir, mais un cadre imposé à l’attention. Ce que l’on choisit d’y placer — pensées, récits, projets, rêveries — finit par donner au voyage sa véritable texture.</p>
       `,
-      secondary: `
+				secondary: `
         <p>Une petite coupure, en bas de colonne, signale un détail presque anodin&nbsp;: les observateurs ont noté une légère accélération du temps ressenti. Les journées paraissent plus brèves, les semaines glissent comme des feuilles fines, tournées un peu trop vite.</p>
       `,
-      editorial: `
+				editorial: `
         <p>C’est une vieille habitude hivernale : croire que rien ne bouge parce que tout est enveloppé de silence. En réalité, les trajectoires s’ajustent, même dans l’immobilité apparente.</p>
         <p>Il faudrait peut-être accepter que la progression la plus décisive ne soit pas celle que l’on voit, mais celle que l’on consent à imaginer. Les chiffres nous rassurent, mais ce sont les histoires que nous tissons autour d’eux qui nous tiennent réellement chaud.</p>
       `
-    },
-    {
-      id: "ms-2026-02-11",
-      date: utcDate(2026, 2, 11),
-      label: "11 février 2026",
-      title: "Édition de mi-parcours",
-      main: `
+			},
+			{
+				id: "ms-2026-02-11",
+				date: utcDate(2026, 2, 11),
+				label: "11 février 2026",
+				title: "Édition de mi-parcours",
+				main: `
         <p>À mi-chemin ou presque, la ligne de pointillés cesse d’être une abstraction&nbsp;: on en a déjà parcouru une bonne part, et l’on devine la portion restante comme une saignée claire dans l’avenir proche. Le curseur grisé pulse désormais avec la régularité rassurante d’un métronome.</p>
         <p>Les récits internes parlent d’ajustements minuscules, invisibles au lecteur pressé. Pourtant, ce sont ces corrections-là qui sculptent la trajectoire : un recalage de quelques heures, une réévaluation silencieuse d’objectifs intermédiaires, une façon plus fine de lire ce que disent vraiment les mesures.</p>
         <p>On sent poindre une légère impatience, mêlée à une forme de tendresse pour le trajet lui-même. On sait qu’il finira, et c’est peut-être cela qui le rend si étrange&nbsp;: chaque pointillé, déjà derrière, a eu son moment précis pour exister.</p>
       `,
-      secondary: `
+				secondary: `
         <p>Une brève note, presque perdue dans la maquette, suggère qu’il serait temps de préparer l’arrivée. Pas en la précipitant, mais en apprenant à regarder la distance restante comme un espace encore habitable, et non comme un simple retard à combler.</p>
       `,
-      editorial: `
+				editorial: `
         <p>Nous aimons parler de «&nbsp;moitié du chemin&nbsp;» comme d’un tournant. C’est vrai, jusqu’à un certain point&nbsp;: nous avons assez de passé pour mesurer, assez d’avenir pour projeter.</p>
         <p>Mais cette position est aussi inconfortable&nbsp;: elle oblige à tenir ensemble ce qui est fait et ce qui reste. Peut-être est-ce justement là que la vigilance devient intéressante : non pas pour corriger un cap défaillant, mais pour apprendre à habiter, consciemment, le cœur même du trajet.</p>
       `
-    }
-  ];
+			}
+		];
 
-  function createMilestones() {
-    const track = document.getElementById("prairial-track");
-    if (!track) return;
+		function createMilestones() {
+			const track = document.getElementById("prairial-track");
+			if (!track) return;
 
-    milestoneConfig.forEach((ms) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "prairial-milestone";
-      button.setAttribute("aria-label", ms.label);
-      button.title = ms.label;
+			milestoneConfig.forEach((ms) => {
+				const button = document.createElement("button");
+				button.type = "button";
+				button.className = "prairial-milestone";
+				button.setAttribute("aria-label", ms.label);
+				button.title = ms.label;
 
-      // Position le jalon selon la date correspondante
-      const frac = progressFor(ms.date);
-      button.style.setProperty("--prairial-position", frac.toString());
+				// Position le jalon selon la date correspondante
+				const frac = progressFor(ms.date);
+				button.style.setProperty("--prairial-position", frac.toString());
 
-      button.dataset.milestoneId = ms.id;
+				button.dataset.milestoneId = ms.id;
 
-      button.addEventListener("click", function () {
-        selectMilestone(ms.id);
-      });
+				button.addEventListener("click", function () {
+					selectMilestone(ms.id);
+				});
 
-      track.appendChild(button);
-    });
-  }
+				track.appendChild(button);
+			});
+		}
 
-  function selectMilestone(id) {
-    const data = milestoneConfig.find((m) => m.id === id);
-    if (!data) return;
+		function selectMilestone(id) {
+			const data = milestoneConfig.find((m) => m.id === id);
+			if (!data) return;
 
-    const journal = document.getElementById("prairial-journal");
-    const titleEl = document.getElementById("prairial-journal-title");
-    const dateEl = document.getElementById("prairial-journal-date");
-    const mainEl = document.getElementById("prairial-journal-main-article");
-    const secondaryEl = document.getElementById("prairial-journal-secondary");
-    const editorialEl = document.getElementById("prairial-journal-editorial-content");
+			const journal = document.getElementById("prairial-journal");
+			const titleEl = document.getElementById("prairial-journal-title");
+			const dateEl = document.getElementById("prairial-journal-date");
+			const mainEl = document.getElementById("prairial-journal-main-article");
+			const secondaryEl = document.getElementById("prairial-journal-secondary");
+			const editorialEl = document.getElementById("prairial-journal-editorial-content");
 
-    if (!journal || !titleEl || !dateEl || !mainEl || !secondaryEl || !editorialEl) {
-      return;
-    }
+			if (!journal || !titleEl || !dateEl || !mainEl || !secondaryEl || !editorialEl) {
+				return;
+			}
 
-    titleEl.textContent = data.title;
-    dateEl.textContent = data.label;
-    mainEl.innerHTML = data.main;
-    secondaryEl.innerHTML = data.secondary;
-    editorialEl.innerHTML = data.editorial;
+			titleEl.textContent = data.title;
+			dateEl.textContent = data.label;
+			mainEl.innerHTML = data.main;
+			secondaryEl.innerHTML = data.secondary;
+			editorialEl.innerHTML = data.editorial;
 
-    journal.classList.remove("prairial-journal--hidden");
+			journal.classList.remove("prairial-journal--hidden");
 
-    // Marque visuellement le jalon actif
-    const allMilestones = document.querySelectorAll(".prairial-milestone");
-    allMilestones.forEach((el) => {
-      el.classList.toggle(
-        "prairial-milestone--active",
-        el.dataset.milestoneId === id
-      );
-    });
-  }
+			// Marque visuellement le jalon actif
+			const allMilestones = document.querySelectorAll(".prairial-milestone");
+			allMilestones.forEach((el) => {
+				el.classList.toggle(
+					"prairial-milestone--active",
+					el.dataset.milestoneId === id
+				);
+			});
+		}
 
-  // Initialisation
-  document.addEventListener("DOMContentLoaded", function () {
-    createMilestones();
-    updateProgress();
+		// Initialisation
+		document.addEventListener("DOMContentLoaded", function () {
+			createMilestones();
+			updateProgress();
 
-    // Si tu veux que la progression se mette à jour automatiquement
-    // tant que la page reste ouverte, tu peux décommenter :
-    // setInterval(updateProgress, 60 * 60 * 1000); // toutes les heures
-  });
-})();
+			// Si tu veux que la progression se mette à jour automatiquement
+			// tant que la page reste ouverte, tu peux décommenter :
+			setInterval(updateProgress, 60 * 60 * 1000); // toutes les heures
+		});
+	})();
 </script>
-

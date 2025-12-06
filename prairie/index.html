@@ -1,640 +1,10 @@
----
-layout: default
-title: prairie
-permalink: /prairie/
----
-
-<div class="prairie-root">
-	<section class="prairie-progress" aria-labelledby="prairie-heading">
-		<h2 id="prairie-heading" class="prairie-sr-only">Progression du trajet Prairie</h2>
-
-		<div class="prairie-track" id="prairie-track" aria-hidden="false">
-			<!-- Ligne pointillée version sci-fi -->
-			<div class="prairie-line" aria-hidden="true"></div>
-
-			<!-- Portion déjà parcourue en trait plein -->
-			<div class="prairie-line-completed" aria-hidden="true"></div>
-
-			<!-- Extrémités -->
-			<div class="prairie-endpoint prairie-endpoint--left" aria-label="Arrivée"></div>
-			<div class="prairie-endpoint prairie-endpoint--right" aria-label="Départ"></div>
-
-			<!-- Curseur -->
-			<div class="prairie-pointer" id="prairie-pointer" aria-label="Position actuelle sur le trajet"></div>
-
-			<!-- Jalons injectés via JavaScript -->
-		</div>
-
-		<div class="prairie-legend">
-			<span id="prairie-date-label"></span>
-			<span id="prairie-distance-label"></span>
-		</div>
-
-		<!-- Connecteurs (courbes) entre jalons et blocs -->
-		<svg id="prairie-connectors" class="prairie-connectors" aria-hidden="true" preserveAspectRatio="none"></svg>
-
-		<!-- Bloc des cartes d’étapes -->
-		<div class="prairie-milestone-blocks-wrapper">
-			<div class="prairie-milestone-blocks" id="prairie-milestone-blocks" aria-label="Étapes du trajet"></div>
-		</div>
-	</section>
-
-	<!-- Bloc "vieux journal" -->
-	<section id="prairie-journal" class="prairie-journal prairie-journal--hidden" aria-live="polite">
-		<header class="prairie-journal-header">
-			<div>
-				<h2 id="prairie-journal-title"></h2>
-				<p id="prairie-journal-date" class="prairie-journal-date"></p>
-			</div>
-			<p class="prairie-journal-kicker">Feuille de route – édition spéciale</p>
-			<button type="button" id="prairie-journal-close" class="prairie-journal-close"
-				aria-label="Fermer le journal">
-				×
-			</button>
-		</header>
-
-		<div class="prairie-journal-layout">
-			<!-- Colonne principale (article sur deux colonnes + extrait) -->
-			<div class="prairie-journal-main">
-				<div id="prairie-journal-main-article" class="prairie-journal-main-article"></div>
-				<div id="prairie-journal-secondary" class="prairie-journal-secondary"></div>
-			</div>
-
-			<!-- Colonne édito (1/5 environ) -->
-			<aside class="prairie-journal-editorial">
-				<h3 class="prairie-journal-editorial-title">Édito</h3>
-				<div id="prairie-journal-editorial-content"></div>
-			</aside>
-		</div>
-	</section>
-</div>
-
-<style>
-	/* === Styles prairie === */
-
-	:root {
-		/* 0 = départ (cercle rouge à droite), 1 = arrivée (cercle bleu à gauche) */
-		--prairie-progress: 0;
-	}
-
-	body {
-		margin: 0;
-		padding: 0;
-		background: #000000;
-		color: #dddddd;
-	}
-
-	/* Masquer le H1 injecté par le layout et l’ancien titre visible */
-	main h1,
-	.page-title,
-	.prairie-title,
-	.markdown-body h1 {
-		display: none !important;
-	}
-
-	.prairie-root {
-		min-height: 100vh;
-		display: flex;
-		flex-direction: column;
-	}
-
-	/* Texte uniquement pour lecteurs d’écran */
-	.prairie-sr-only {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-		white-space: nowrap;
-		border: 0;
-	}
-
-	/* Progression sur le tiers supérieur */
-
-	.prairie-progress {
-		max-width: 100%;
-		width: 100%;
-		margin: 6vh auto 4vh;
-		padding: 0;
-		position: relative;
-		/* pour le SVG des connecteurs */
-	}
-
-	/* La piste s'étend sur toute la largeur, la trajectoire elle-même fait 80% */
-
-	.prairie-track {
-		position: relative;
-		width: 100%;
-		height: 12vh;
-		min-height: 90px;
-		z-index: 3;
-	}
-
-	/* Ligne pointillée futuriste – affinée pour matcher la barre, pattern 8px x 4px */
-
-	.prairie-line {
-		position: absolute;
-		top: 50%;
-		left: 10%;
-		width: 80%;
-		height: 4px;
-		transform: translateY(-50%);
-		background-image:
-			radial-gradient(circle,
-				rgba(190, 190, 190, 0.9) 0,
-				rgba(190, 190, 190, 0.9) 45%,
-				transparent 55%);
-		background-size: 8px 4px;
-		background-repeat: repeat-x;
-		opacity: 0.65;
-		border-radius: 999px;
-		filter: drop-shadow(0 0 6px rgba(200, 200, 200, 0.35));
-		z-index: 0;
-		pointer-events: none;
-	}
-
-	/* Segment complété en trait plein, posé au-dessus de la ligne pointillée */
-
-	.prairie-line-completed {
-		position: absolute;
-		top: 50%;
-		left: 10%;
-		width: 80%;
-		height: 8px;
-		transform: translateY(-50%);
-		pointer-events: none;
-		z-index: 1;
-	}
-
-	.prairie-line-completed::before {
-		content: "";
-		position: absolute;
-		top: 50%;
-		right: 0;
-		transform: translateY(-50%);
-		height: 4px;
-		width: calc(var(--prairie-progress) * 100%);
-		/* Gris uni, un peu plus discret */
-		background: rgba(200, 200, 200, 0.68);
-		border-radius: 999px;
-		box-shadow:
-			0 0 6px rgba(220, 220, 220, 0.6),
-			0 0 10px rgba(220, 220, 220, 0.4);
-	}
-
-	/* Cercles d'extrémité */
-
-	.prairie-endpoint {
-		position: absolute;
-		top: 50%;
-		transform: translate(-50%, -50%);
-		border-radius: 50%;
-		z-index: 2;
-		/* au-dessus de la barre de progression */
-		pointer-events: none;
-	}
-
-	/* Bleu / arrivée à gauche */
-	.prairie-endpoint--left {
-		left: 10%;
-		width: 1.5vw;
-		height: 1.5vw;
-		min-width: 20px;
-		min-height: 20px;
-		background: #2f8bff;
-		box-shadow:
-			0 0 10px rgba(80, 170, 255, 0.9),
-			0 0 22px rgba(80, 170, 255, 0.6);
-	}
-
-	/* Rouge / départ à droite */
-	.prairie-endpoint--right {
-		left: 90%;
-		width: 1vw;
-		height: 1vw;
-		min-width: 16px;
-		min-height: 16px;
-		background: #ff7b45;
-		box-shadow:
-			0 0 10px rgba(255, 136, 76, 0.9),
-			0 0 22px rgba(255, 136, 76, 0.6);
-	}
-
-	/* Curseur simplifié (couleur unie), pulsations larges et rapides/opaques */
-
-	.prairie-pointer {
-		position: absolute;
-		top: 50%;
-		/* progression de droite (rouge) vers gauche (bleu) */
-		left: calc(10% + (1 - var(--prairie-progress)) * 80%);
-		width: 1.1vw;
-		height: 1.1vw;
-		min-width: 18px;
-		min-height: 18px;
-		border-radius: 50%;
-		background: #d8d8d8;
-		border: 2px solid #f0f0f0;
-		transform: translate(-50%, -50%);
-		z-index: 3;
-		overflow: visible;
-		pointer-events: none;
-	}
-
-	.prairie-pointer::before,
-	.prairie-pointer::after {
-		content: "";
-		position: absolute;
-		inset: 0;
-		border-radius: 50%;
-		border: 2px solid rgba(220, 220, 220, 0.7);
-		opacity: 0;
-	}
-
-	.prairie-pointer::before {
-		animation: prairiePulseSlow 2.2s ease-out infinite;
-	}
-
-	.prairie-pointer::after {
-		animation: prairiePulseFast 1.3s ease-out infinite;
-		animation-delay: 0.45s;
-	}
-
-	@keyframes prairiePulseSlow {
-		0% {
-			transform: scale(1);
-			opacity: 0.95;
-		}
-
-		70% {
-			transform: scale(3.4);
-			opacity: 0;
-		}
-
-		100% {
-			opacity: 0;
-		}
-	}
-
-	@keyframes prairiePulseFast {
-		0% {
-			transform: scale(1);
-			opacity: 0.8;
-		}
-
-		60% {
-			transform: scale(2.6);
-			opacity: 0;
-		}
-
-		100% {
-			opacity: 0;
-		}
-	}
-
-	/* Jalons (milestones) – décoratifs, non cliquables */
-
-	.prairie-milestone {
-		--prairie-position: 0;
-		position: absolute;
-		top: 50%;
-		/* interpolation droite → gauche (0 = droite / départ, 1 = gauche / arrivée) */
-		left: calc(10% + (1 - var(--prairie-position)) * 80%);
-		transform: translate(-50%, -50%);
-		width: 0.35vw;
-		height: 0.35vw;
-		min-width: 12px;
-		min-height: 12px;
-		border-radius: 50%;
-		border: none;
-		/* pas de bordure, juste la couleur */
-		background: #939393;
-		cursor: default;
-		z-index: 4;
-		padding: 0;
-		outline: none;
-		pointer-events: none;
-	}
-
-	/* "Tige" verticale sous le jalon (25px) */
-
-	.prairie-milestone::after {
-		content: "";
-		position: absolute;
-		top: 100%;
-		left: 50%;
-		width: 1px;
-		height: 25px;
-		margin-top: 4px;
-		transform: translateX(-50%);
-		background: #6d6d6d;
-	}
-
-	.prairie-milestone--active {
-		background: #f9ebcf;
-	}
-
-	/* Légende (date + distance) */
-
-	.prairie-legend {
-		margin-top: 1rem;
-		padding: 0 10%;
-		display: flex;
-		justify-content: space-between;
-		gap: 1rem;
-		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-		font-size: 0.85rem;
-		color: #b0b0b0;
-		z-index: 3;
-		position: relative;
-	}
-
-	.prairie-legend span {
-		white-space: nowrap;
-	}
-
-	/* === Blocs d’étapes + connecteurs === */
-
-	.prairie-connectors {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-		overflow: visible;
-		z-index: 2;
-	}
-
-	.prairie-connectors path {
-		stroke: rgba(210, 210, 210, 0.7);
-		stroke-width: 1.4;
-		fill: none;
-		stroke-linecap: round;
-		stroke-linejoin: round;
-		filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.12));
-	}
-
-	.prairie-milestone-blocks-wrapper {
-		position: relative;
-		margin: 2.4rem 10% 0;
-		z-index: 3;
-	}
-
-	.prairie-milestone-blocks {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 1.4rem;
-	}
-
-	.prairie-milestone-block {
-		background: #101010;
-		border: 1px solid #2c2c2c;
-		border-radius: 8px;
-		padding: 0.75rem 0.9rem;
-		text-align: left;
-		color: #e0e0e0;
-		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-		font-size: 0.8rem;
-		cursor: pointer;
-		transition:
-			background 0.18s ease-out,
-			border-color 0.18s ease-out,
-			transform 0.18s ease-out,
-			box-shadow 0.18s ease-out;
-	}
-
-	.prairie-milestone-block:hover,
-	.prairie-milestone-block:focus-visible {
-		background: #181818;
-		border-color: #bbbbbb;
-		box-shadow: 0 0 12px rgba(255, 255, 255, 0.12);
-		transform: translateY(-1px);
-	}
-
-	.prairie-milestone-block--active {
-		background: #202020;
-		border-color: #f9ebcf;
-		box-shadow: 0 0 14px rgba(249, 235, 207, 0.3);
-	}
-
-	.prairie-milestone-block-date {
-		display: block;
-		font-size: 0.72rem;
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
-		color: #a8a8a8;
-		margin-bottom: 0.25rem;
-	}
-
-	.prairie-milestone-block-title {
-		display: block;
-		font-size: 0.84rem;
-		font-weight: 500;
-		color: #f0f0f0;
-	}
-
-	/* Journal style vieux papier, légèrement éclairci */
-
-	.prairie-journal {
-		max-width: 960px;
-		margin: 4vh auto 10vh;
-		padding: 2.5rem 2.25rem 2.75rem;
-		background: #f8f0de;
-		border-radius: 4px;
-		box-shadow:
-			0 18px 32px rgba(0, 0, 0, 0.5),
-			0 0 0 1px rgba(104, 86, 54, 0.4);
-		font-family: "Georgia", "Times New Roman", serif;
-		color: #30251a;
-		position: relative;
-	}
-
-	.prairie-journal--hidden {
-		display: none;
-	}
-
-	.prairie-journal-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-end;
-		border-bottom: 1px solid #d1c3a7;
-		padding-bottom: 0.75rem;
-		margin-bottom: 1.5rem;
-	}
-
-	/* Bouton de fermeture (croix) – légèrement agrandi, collé en haut à droite du journal */
-
-	.prairie-journal-close {
-		position: absolute;
-		top: 0.6rem;
-		right: 0.6rem;
-		background: transparent;
-		border: none;
-		font-size: 1.3rem;
-		line-height: 1;
-		cursor: pointer;
-		color: #7c6a4d;
-		padding: 0.1rem 0.3rem;
-	}
-
-	.prairie-journal-close:hover,
-	.prairie-journal-close:focus-visible {
-		color: #3b2c1c;
-	}
-
-	.prairie-journal-header h2 {
-		margin: 0;
-		font-size: 1.6rem;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-	}
-
-	.prairie-journal-date {
-		margin: 0.25rem 0 0;
-		font-size: 0.85rem;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
-		color: #7c6a4d;
-	}
-
-	.prairie-journal-kicker {
-		margin: 0;
-		font-size: 0.8rem;
-		letter-spacing: 0.2em;
-		text-transform: uppercase;
-		color: #8a7451;
-	}
-
-	.prairie-journal-layout {
-		display: grid;
-		grid-template-columns: minmax(0, 4fr) minmax(0, 1fr);
-		column-gap: 2.25rem;
-	}
-
-	/* Article principal sur deux colonnes */
-
-	.prairie-journal-main-article {
-		font-size: 0.96rem;
-		line-height: 1.7;
-		column-count: 2;
-		column-gap: 2rem;
-		text-align: justify;
-	}
-
-	.prairie-journal-main-article p {
-		margin: 0 0 0.9rem;
-	}
-
-	/* Titres internes des articles */
-
-	.prairie-article-main-title,
-	.prairie-article-secondary-title {
-		font-family: "Georgia", "Times New Roman", serif;
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
-		font-size: 0.98rem;
-		margin: 0 0 0.5rem;
-		color: #4c3b28;
-		column-span: all;
-	}
-
-	/* Extrait d’article secondaire (coupé) */
-
-	.prairie-journal-secondary {
-		margin-top: 1.6rem;
-		padding-top: 0.75rem;
-		border-top: 1px solid #d1c3a7;
-
-
-		font-size: 0.9rem;
-		line-height: 1.6;
-		text-align: justify;
-		position: relative;
-	}
-
-	.prairie-journal-secondary p {
-		margin: 0 0 0.7rem;
-	}
-
-	.prairie-journal-secondary::after {
-		content: "…";
-		position: absolute;
-		right: 0;
-		bottom: -0.4rem;
-		font-weight: bold;
-		font-size: 1.1rem;
-	}
-
-	/* Colonne édito ~1/5 */
-
-	.prairie-journal-editorial {
-		border-left: 1px solid #d1c3a7;
-		padding-left: 1.4rem;
-		font-size: 0.88rem;
-		line-height: 1.6;
-	}
-
-	.prairie-journal-editorial-title {
-		margin: 0 0 0.6rem;
-		font-size: 0.9rem;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
-		color: #7c6a4d;
-	}
-
-	.prairie-journal-editorial p {
-		margin: 0 0 0.8rem;
-	}
-
-	/* Adaptation responsive */
-
-	@media (max-width: 900px) {
-		.prairie-milestone-blocks {
-			grid-template-columns: 1fr;
-		}
-
-		.prairie-journal-layout {
-			grid-template-columns: 1fr;
-			row-gap: 1.75rem;
-		}
-
-		.prairie-journal-editorial {
-			border-left: none;
-			border-top: 1px solid #d1c3a7;
-			padding-left: 0;
-			padding-top: 1rem;
-		}
-
-		.prairie-journal-main-article {
-			column-count: 1;
-		}
-	}
-
-	@media (max-width: 600px) {
-		.prairie-progress {
-			margin-top: 5vh;
-		}
-
-		.prairie-track {
-			min-height: 80px;
-		}
-
-		.prairie-legend {
-			flex-direction: column;
-			align-items: flex-start;
-		}
-	}
-</style>
-
 <script>
 	// === Logique Prairie  ===
 
 	(function () {
 		// Paramètres géométriques des connecteurs
 		const CURVE_RADIUS = 12;      // rayon des quarts de cercle
-		const VERTICAL_SHIFT = 5;     // décalage vertical entre lignes
+		const VERTICAL_SHIFT = 5;     // décalage vertical entre lignes (en haut)
 		const HORIZ_SHORTEN = 5;      // "raccourci" horizontal avant descente
 		const BUNDLE_SPACING = 5;     // espacement horizontal des rails au centre
 
@@ -694,6 +64,8 @@ permalink: /prairie/
 			const traveledKm = totalDistanceKm * progress;
 			const traveledMillions = traveledKm / 1e6;
 			const totalMillions = totalDistanceKm / 1e6;
+
+
 
 			distanceLabel.textContent =
 				numberFormatterMillions.format(traveledMillions) +
@@ -777,8 +149,6 @@ permalink: /prairie/
 		});
 
 		function createMilestones() {
-
-
 			const track = document.getElementById("prairie-track");
 			if (!track) return;
 
@@ -903,6 +273,8 @@ permalink: /prairie/
 			const legendBottomLocal = legendRect.bottom - rect.top;
 
 			sortedMilestones.forEach((ms, idx) => {
+
+
 				const milestoneEl = document.querySelector(
 					`.prairie-milestone[data-milestone-id="${ms.id}"]`
 				);
@@ -917,24 +289,24 @@ permalink: /prairie/
 
 				const orderIndex = orderIndexById[ms.id] ?? idx;
 
-				// Bas de la tige
+				// Bas visuel de la tige
 				const stemBottomY = mRect.bottom - rect.top;
 				const P0x = mRect.left + mRect.width / 2 - rect.left;
 				let P0y =
-					stemBottomY + 4 + 25 + orderIndex * VERTICAL_SHIFT; // marge + hauteur de la tige + décalage
+					stemBottomY + 4 + 25 + orderIndex * VERTICAL_SHIFT; // marge + tige + décalage haut
 
-				// Position centrale "théorique" pour ce connecteur
+				// Colonne centrale pour ce connecteur
 				const baseColumnX =
 					centerX + (orderIndex - centerIndex) * BUNDLE_SPACING;
 
-				// Direction générale vers le centre
+				// Direction vers le centre (1 = droite, -1 = gauche)
 				let dirToCenter = baseColumnX >= P0x ? 1 : -1;
 
-				// ==== 1er quart de cercle : bas de la tige → vers le centre (bas + côté) ====
+				// ==== 1er quart de cercle : bas de la tige → bas + côté vers le centre ====
 				const P1x = P0x + dirToCenter * CURVE_RADIUS;
 				const P1y = P0y + CURVE_RADIUS;
 
-				// ==== barre horizontale ~vers le centre, légèrement raccourcie ====
+				// Barre horizontale vers la colonne centrale, légèrement raccourcie
 				const pullback = HORIZ_SHORTEN * orderIndex;
 				const columnX = baseColumnX - dirToCenter * pullback;
 
@@ -946,11 +318,11 @@ permalink: /prairie/
 				const P3x = columnX;
 				const P3y = P2y + CURVE_RADIUS;
 
-				// Descente verticale au-delà de la légende
+				// Descente verticale au-delà de la légende, SANS rajouter le décalage vertical
 				let P4x = columnX;
 				let P4y = Math.max(
 					P3y + CURVE_RADIUS,
-					legendBottomLocal + 20 + orderIndex * VERTICAL_SHIFT
+					legendBottomLocal + 20
 				);
 
 				// ==== 3e quart de cercle : rail vertical → côté du bloc ====
@@ -970,21 +342,31 @@ permalink: /prairie/
 				const P7y = blockTopLocal;
 
 				// Construction du path : M → arc1 → L → arc2 → L → arc3 → L → L
-				const sweep1 = dirToCenter > 0 ? 1 : 0;
-				const sweep2 = dirHoriz > 0 ? 1 : 0;
-				const sweep3 = dirToBlock > 0 ? 1 : 0;
+				// Top arc was reversed → flip sweep1
+				const baseSweep1 = dirToCenter > 0 ? 1 : 0;
+				const sweep1 = 1 - baseSweep1;
+
+				// 2e arc était bon → garder sweep2
+				const baseSweep2 = dirHoriz > 0 ? 1 : 0;
+				const sweep2 = baseSweep2;
+
+				// 3e arc était inversé → flip sweep3
+
+
+				const baseSweep3 = dirToBlock > 0 ? 1 : 0;
+				const sweep3 = 1 - baseSweep3;
 
 				const d =
 					`M ${P0x} ${P0y} ` +
-					// 1er quart de cercle
+					// 1er quart de cercle (vers le centre, orienté correctement)
 					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep1} ${P1x} ${P1y} ` +
-					// barre horizontale vers le centre
+					// barre horizontale vers la colonne centrale
 					`L ${P2x} ${P2y} ` +
-					// 2e quart de cercle vers le rail vertical
+					// 2e quart de cercle vers le rail vertical (sous la légende)
 					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep2} ${P3x} ${P3y} ` +
 					// descente verticale sous la légende
 					`L ${P4x} ${P4y} ` +
-					// 3e quart de cercle vers le bloc
+					// 3e quart de cercle vers le bloc (orienté correctement)
 					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep3} ${P5x} ${P5y} ` +
 					// barre horizontale vers le centre du bloc
 					`L ${P6x} ${P6y} ` +

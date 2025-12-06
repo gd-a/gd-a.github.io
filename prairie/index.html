@@ -368,13 +368,16 @@ permalink: /prairie/
 	}
 
 	.prairie-connectors path {
-		stroke: rgba(210, 210, 210, 0.7);
-		stroke-width: 1.4;
+		stroke: #6d6d6d;
+		/* même couleur que la tige des milestones */
+		stroke-width: 1px;
+		/* même épaisseur visuelle */
 		fill: none;
 		stroke-linecap: round;
 		stroke-linejoin: round;
-		filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.12));
+		filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.6));
 	}
+
 
 	.prairie-milestone-blocks-wrapper {
 		position: relative;
@@ -627,14 +630,13 @@ permalink: /prairie/
 		}
 	}
 </style>
-
 <script>
 	// === Logique Prairie  ===
 
 	(function () {
 		// Paramètres géométriques des connecteurs
 		const CURVE_RADIUS = 12;      // rayon des quarts de cercle
-		const VERTICAL_SHIFT = 5;     // décalage vertical entre lignes (en haut)
+		const VERTICAL_SHIFT = 5;     // décalage vertical entre lignes (en haut, pour éviter la fusion)
 		const HORIZ_SHORTEN = 5;      // "raccourci" horizontal avant descente
 		const BUNDLE_SPACING = 5;     // espacement horizontal des rails au centre
 
@@ -694,8 +696,6 @@ permalink: /prairie/
 			const traveledKm = totalDistanceKm * progress;
 			const traveledMillions = traveledKm / 1e6;
 			const totalMillions = totalDistanceKm / 1e6;
-
-
 
 			distanceLabel.textContent =
 				numberFormatterMillions.format(traveledMillions) +
@@ -903,8 +903,6 @@ permalink: /prairie/
 			const legendBottomLocal = legendRect.bottom - rect.top;
 
 			sortedMilestones.forEach((ms, idx) => {
-
-
 				const milestoneEl = document.querySelector(
 					`.prairie-milestone[data-milestone-id="${ms.id}"]`
 				);
@@ -919,17 +917,29 @@ permalink: /prairie/
 
 				const orderIndex = orderIndexById[ms.id] ?? idx;
 
+				// Décalage vertical supplémentaire de la première liaison :
+				// middle +5px, leftmost +10px, rightmost 0
+				let extraStart = 0;
+				if (orderIndex === 1) extraStart = 5;
+				if (orderIndex === 2) extraStart = 10;
+
 				// Bas visuel de la tige
 				const stemBottomY = mRect.bottom - rect.top;
 				const P0x = mRect.left + mRect.width / 2 - rect.left;
 				let P0y =
-					stemBottomY + 4 + 25 + orderIndex * VERTICAL_SHIFT; // marge + tige + décalage haut
+					stemBottomY + 4 + 25 + orderIndex * VERTICAL_SHIFT + extraStart;
 
 				// Colonne centrale pour ce connecteur
-				const baseColumnX =
+				let baseColumnX =
 					centerX + (orderIndex - centerIndex) * BUNDLE_SPACING;
 
-				// Direction vers le centre (1 = droite, -1 = gauche)
+				// Pour le lien le plus à droite, on réduit sa barre horizontale vers le centre de 15px
+				if (orderIndex === 0) {
+					const sign = baseColumnX >= P0x ? 1 : -1;
+					baseColumnX -= sign * 15;
+				}
+
+				// Direction vers le centre (1 = droite, 0 = gauche)
 				let dirToCenter = baseColumnX >= P0x ? 1 : -1;
 
 				// ==== 1er quart de cercle : bas de la tige → bas + côté vers le centre ====
@@ -948,7 +958,7 @@ permalink: /prairie/
 				const P3x = columnX;
 				const P3y = P2y + CURVE_RADIUS;
 
-				// Descente verticale au-delà de la légende, SANS rajouter le décalage vertical
+				// Descente verticale au-delà de la légende, SANS réappliquer le décalage vertical
 				let P4x = columnX;
 				let P4y = Math.max(
 					P3y + CURVE_RADIUS,
@@ -972,31 +982,29 @@ permalink: /prairie/
 				const P7y = blockTopLocal;
 
 				// Construction du path : M → arc1 → L → arc2 → L → arc3 → L → L
-				// Top arc was reversed → flip sweep1
+				// Top arc était inversé → on inverse le sweep1
 				const baseSweep1 = dirToCenter > 0 ? 1 : 0;
 				const sweep1 = 1 - baseSweep1;
 
-				// 2e arc était bon → garder sweep2
+				// 2e arc était correct → on garde sweep2
 				const baseSweep2 = dirHoriz > 0 ? 1 : 0;
 				const sweep2 = baseSweep2;
 
-				// 3e arc était inversé → flip sweep3
-
-
+				// 3e arc était inversé → on inverse sweep3
 				const baseSweep3 = dirToBlock > 0 ? 1 : 0;
 				const sweep3 = 1 - baseSweep3;
 
 				const d =
 					`M ${P0x} ${P0y} ` +
-					// 1er quart de cercle (vers le centre, orienté correctement)
+					// 1er quart de cercle (vers le centre)
 					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep1} ${P1x} ${P1y} ` +
 					// barre horizontale vers la colonne centrale
 					`L ${P2x} ${P2y} ` +
-					// 2e quart de cercle vers le rail vertical (sous la légende)
+					// 2e quart de cercle vers le rail vertical
 					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep2} ${P3x} ${P3y} ` +
 					// descente verticale sous la légende
 					`L ${P4x} ${P4y} ` +
-					// 3e quart de cercle vers le bloc (orienté correctement)
+					// 3e quart de cercle vers le bloc
 					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep3} ${P5x} ${P5y} ` +
 					// barre horizontale vers le centre du bloc
 					`L ${P6x} ${P6y} ` +
@@ -1021,6 +1029,8 @@ permalink: /prairie/
 			}
 
 			window.addEventListener("resize", function () {
+
+
 				drawConnectors();
 			});
 		});

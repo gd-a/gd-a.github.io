@@ -79,7 +79,8 @@ permalink: /prairie/
 	/* Masquer le H1 injecté par le layout et l’ancien titre visible */
 	main h1,
 	.page-title,
-	.prairie-title {
+	.prairie-title,
+	.markdown-body h1 {
 		display: none !important;
 	}
 
@@ -130,7 +131,7 @@ permalink: /prairie/
 		min-height: 90px;
 	}
 
-	/* Ligne pointillée futuriste (série de "capsules" arrondies) – affinée pour matcher la barre */
+	/* Ligne pointillée futuriste – affinée pour matcher la barre, pattern 8px x 4px */
 
 	.prairie-line {
 		position: absolute;
@@ -144,7 +145,7 @@ permalink: /prairie/
 				rgba(190, 190, 190, 0.9) 0,
 				rgba(190, 190, 190, 0.9) 45%,
 				transparent 55%);
-		background-size: 24px 4px;
+		background-size: 8px 4px;
 		background-repeat: repeat-x;
 		opacity: 0.65;
 		border-radius: 999px;
@@ -188,6 +189,8 @@ permalink: /prairie/
 		top: 50%;
 		transform: translate(-50%, -50%);
 		border-radius: 50%;
+		z-index: 2;
+		/* au-dessus de la barre de progression */
 	}
 
 	.prairie-endpoint--left {
@@ -216,7 +219,7 @@ permalink: /prairie/
 			0 0 22px rgba(255, 136, 76, 0.6);
 	}
 
-	/* Curseur simplifié (couleur unie), pulsations plus larges */
+	/* Curseur simplifié (couleur unie), pulsations plus larges et un peu plus rapides/opaques */
 
 	.prairie-pointer {
 		position: absolute;
@@ -235,31 +238,29 @@ permalink: /prairie/
 		overflow: visible;
 	}
 
-	/* Vague principale (finie, rayon identique mais plus fine visuellement) */
-
 	.prairie-pointer::before,
 	.prairie-pointer::after {
 		content: "";
 		position: absolute;
 		inset: 0;
 		border-radius: 50%;
-		border: 2px solid rgba(220, 220, 220, 0.5);
+		border: 2px solid rgba(220, 220, 220, 0.7);
 		opacity: 0;
 	}
 
 	.prairie-pointer::before {
-		animation: prairiePulseSlow 2.8s ease-out infinite;
+		animation: prairiePulseSlow 2.2s ease-out infinite;
 	}
 
 	.prairie-pointer::after {
-		animation: prairiePulseFast 1.6s ease-out infinite;
-		animation-delay: 0.55s;
+		animation: prairiePulseFast 1.3s ease-out infinite;
+		animation-delay: 0.45s;
 	}
 
 	@keyframes prairiePulseSlow {
 		0% {
 			transform: scale(1);
-			opacity: 0.8;
+			opacity: 0.95;
 		}
 
 		70% {
@@ -275,7 +276,7 @@ permalink: /prairie/
 	@keyframes prairiePulseFast {
 		0% {
 			transform: scale(1);
-			opacity: 0.6;
+			opacity: 0.8;
 		}
 
 		60% {
@@ -366,6 +367,8 @@ permalink: /prairie/
 			0 0 0 1px rgba(104, 86, 54, 0.4);
 		font-family: "Georgia", "Times New Roman", serif;
 		color: #30251a;
+		position: relative;
+		/* pour positionner la croix par rapport au journal */
 	}
 
 	.prairie-journal--hidden {
@@ -379,18 +382,18 @@ permalink: /prairie/
 		border-bottom: 1px solid #d1c3a7;
 		padding-bottom: 0.75rem;
 		margin-bottom: 1.5rem;
-		position: relative;
+		/* position: static (par défaut) pour que la croix se réfère au journal */
 	}
 
-	/* Bouton de fermeture (croix) en haut à droite */
+	/* Bouton de fermeture (croix) – légèrement agrandi, collé en haut à droite du journal */
 
 	.prairie-journal-close {
 		position: absolute;
-		top: 0.2rem;
-		right: 0.2rem;
+		top: 0.6rem;
+		right: 0.6rem;
 		background: transparent;
 		border: none;
-		font-size: 1.1rem;
+		font-size: 1.3rem;
 		line-height: 1;
 		cursor: pointer;
 		color: #7c6a4d;
@@ -416,6 +419,8 @@ permalink: /prairie/
 		text-transform: uppercase;
 		color: #7c6a4d;
 	}
+
+
 
 	.prairie-journal-kicker {
 		margin: 0;
@@ -473,8 +478,6 @@ permalink: /prairie/
 	.prairie-journal-secondary p {
 		margin: 0 0 0.7rem;
 	}
-
-
 
 	.prairie-journal-secondary::after {
 		/* effet "il faut tourner la page" */
@@ -537,6 +540,8 @@ permalink: /prairie/
 		}
 
 		.prairie-legend {
+
+
 			flex-direction: column;
 			align-items: flex-start;
 		}
@@ -597,8 +602,6 @@ permalink: /prairie/
 			);
 
 			// Mise à jour de la légende (date courante + distance)
-
-
 			const dateLabel = document.getElementById("prairie-date-label");
 			const distanceLabel = document.getElementById("prairie-distance-label");
 
@@ -663,6 +666,8 @@ permalink: /prairie/
 			},
 			{
 				id: "ms-2026-02-11",
+
+
 				date: utcDate(2026, 2, 11),
 				label: "11 février 2026",
 				title: "Édition de mi-parcours",
@@ -688,8 +693,6 @@ permalink: /prairie/
 			if (!track) return;
 
 			milestoneConfig.forEach((ms) => {
-
-
 				const button = document.createElement("button");
 				button.type = "button";
 				button.className = "prairie-milestone";
@@ -746,8 +749,6 @@ permalink: /prairie/
 		function closeJournal() {
 			const journal = document.getElementById("prairie-journal");
 			if (journal) {
-
-
 				journal.classList.add("prairie-journal--hidden");
 			}
 			const allMilestones = document.querySelectorAll(".prairie-milestone");

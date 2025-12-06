@@ -460,8 +460,6 @@ permalink: /prairie/
 		justify-content: space-between;
 		align-items: flex-end;
 		border-bottom: 1px solid #d1c3a7;
-
-
 		padding-bottom: 0.75rem;
 		margin-bottom: 1.5rem;
 	}
@@ -548,6 +546,8 @@ permalink: /prairie/
 		margin-top: 1.6rem;
 		padding-top: 0.75rem;
 		border-top: 1px solid #d1c3a7;
+
+
 		font-size: 0.9rem;
 		line-height: 1.6;
 		text-align: justify;
@@ -632,6 +632,12 @@ permalink: /prairie/
 	// === Logique Prairie  ===
 
 	(function () {
+		// Paramètres géométriques des connecteurs
+		const CURVE_RADIUS = 12;      // rayon des quarts de cercle
+		const VERTICAL_SHIFT = 5;     // décalage vertical entre lignes
+		const HORIZ_SHORTEN = 5;      // "raccourci" horizontal avant descente
+		const BUNDLE_SPACING = 5;     // espacement horizontal des rails au centre
+
 		// Dates clés du trajet (en UTC pour éviter les surprises de fuseaux)
 		function utcDate(year, month, day) {
 			// month = 1–12
@@ -644,6 +650,7 @@ permalink: /prairie/
 		// Distance totale représentée par les pointillés
 		const totalDistanceKm = 363.83e6;
 
+		// Pour figer la progression à une date donnée :
 		const USE_MANUAL_DATE = false;
 		const MANUAL_DATE = utcDate(2025, 12, 6); // exemple
 
@@ -673,7 +680,6 @@ permalink: /prairie/
 			const now = USE_MANUAL_DATE ? MANUAL_DATE : new Date();
 			const progress = progressFor(now);
 
-			// Mise à jour de la variable CSS pour la position du curseur
 			document.documentElement.style.setProperty(
 				"--prairie-progress",
 				progress.toString()
@@ -719,8 +725,6 @@ permalink: /prairie/
       `
 			},
 			{
-
-
 				id: "ms-2025-12-01",
 				date: utcDate(2025, 12, 1),
 				label: "1 décembre 2025",
@@ -773,12 +777,12 @@ permalink: /prairie/
 		});
 
 		function createMilestones() {
+
+
 			const track = document.getElementById("prairie-track");
 			if (!track) return;
 
 			milestoneConfig.forEach((ms) => {
-
-
 				const button = document.createElement("button");
 				button.type = "button";
 				button.className = "prairie-milestone";
@@ -801,8 +805,6 @@ permalink: /prairie/
 			if (!container) return;
 
 			sortedMilestones.forEach((ms) => {
-
-
 				const block = document.createElement("button");
 				block.type = "button";
 				block.className = "prairie-milestone-block";
@@ -844,7 +846,6 @@ permalink: /prairie/
 
 			journal.classList.remove("prairie-journal--hidden");
 
-			// Marque visuellement le jalon et le bloc actifs
 			const allMilestones = document.querySelectorAll(".prairie-milestone");
 			allMilestones.forEach((el) => {
 				el.classList.toggle(
@@ -877,7 +878,7 @@ permalink: /prairie/
 			});
 		}
 
-		// Connecteurs : une courbe douce (cubic) par jalon → bloc
+		// Connecteurs : 3 quarts de cercle (A) + segments droits
 		function drawConnectors() {
 			const svg = document.getElementById("prairie-connectors");
 			const progressEl = document.querySelector(".prairie-progress");
@@ -899,11 +900,9 @@ permalink: /prairie/
 			if (count === 0) return;
 			const centerIndex = (count - 1) / 2;
 
-			const BUNDLE_SPACING = 5;   // écarte les courbes au centre
-			const VERTICAL_OFFSET = 5;  // légère différenciation verticale
 			const legendBottomLocal = legendRect.bottom - rect.top;
 
-			sortedMilestones.forEach((ms, index) => {
+			sortedMilestones.forEach((ms, idx) => {
 				const milestoneEl = document.querySelector(
 					`.prairie-milestone[data-milestone-id="${ms.id}"]`
 				);
@@ -914,37 +913,83 @@ permalink: /prairie/
 				if (!milestoneEl || !blockEl) return;
 
 				const mRect = milestoneEl.getBoundingClientRect();
-
-
 				const bRect = blockEl.getBoundingClientRect();
 
-				// Bas de la tige (approx : cercle + marge + 25px)
-				const STEM_MARGIN = 4;
-				const STEM_HEIGHT = 25;
-				const startX = mRect.left + mRect.width / 2 - rect.left;
-				const startY =
-					mRect.bottom - rect.top + STEM_MARGIN + STEM_HEIGHT + index * VERTICAL_OFFSET;
+				const orderIndex = orderIndexById[ms.id] ?? idx;
 
+				// Bas de la tige
+				const stemBottomY = mRect.bottom - rect.top;
+				const P0x = mRect.left + mRect.width / 2 - rect.left;
+				let P0y =
+					stemBottomY + 4 + 25 + orderIndex * VERTICAL_SHIFT; // marge + hauteur de la tige + décalage
+
+				// Position centrale "théorique" pour ce connecteur
+				const baseColumnX =
+					centerX + (orderIndex - centerIndex) * BUNDLE_SPACING;
+
+				// Direction générale vers le centre
+				let dirToCenter = baseColumnX >= P0x ? 1 : -1;
+
+				// ==== 1er quart de cercle : bas de la tige → vers le centre (bas + côté) ====
+				const P1x = P0x + dirToCenter * CURVE_RADIUS;
+				const P1y = P0y + CURVE_RADIUS;
+
+				// ==== barre horizontale ~vers le centre, légèrement raccourcie ====
+				const pullback = HORIZ_SHORTEN * orderIndex;
+				const columnX = baseColumnX - dirToCenter * pullback;
+
+				const dirHoriz = columnX >= P1x ? 1 : -1;
+				const P2x = columnX - dirHoriz * CURVE_RADIUS;
+				const P2y = P1y;
+
+				// ==== 2e quart de cercle : barre horizontale → rail vertical (sous la légende) ====
+				const P3x = columnX;
+				const P3y = P2y + CURVE_RADIUS;
+
+				// Descente verticale au-delà de la légende
+				let P4x = columnX;
+				let P4y = Math.max(
+					P3y + CURVE_RADIUS,
+					legendBottomLocal + 20 + orderIndex * VERTICAL_SHIFT
+				);
+
+				// ==== 3e quart de cercle : rail vertical → côté du bloc ====
 				const blockCenterX = bRect.left + bRect.width / 2 - rect.left;
 				const blockTopLocal = bRect.top - rect.top;
 
-				const railOffset = (index - centerIndex) * BUNDLE_SPACING;
+				const dirToBlock = blockCenterX >= P4x ? 1 : -1;
+				const P5x = P4x + dirToBlock * CURVE_RADIUS;
+				const P5y = P4y + CURVE_RADIUS;
 
-				// Zones de contrôle : une "épaule" au-dessus de la légende, une en dessous
-				const midYTop =
-					(startY + legendBottomLocal) / 2 - 10 - index * VERTICAL_OFFSET;
-				const midYBottom =
-					(legendBottomLocal + blockTopLocal) / 2 + 10 + index * VERTICAL_OFFSET;
+				// Barre horizontale vers l’alignement du bloc
+				const P6x = blockCenterX;
+				const P6y = P5y;
 
-				const c1x = centerX + railOffset * 0.7;
-				const c1y = midYTop;
+				// Descente verticale finale sur le bord supérieur du bloc
+				const P7x = blockCenterX;
+				const P7y = blockTopLocal;
 
-				const c2x = centerX + railOffset * 1.2;
-				const c2y = midYBottom;
+				// Construction du path : M → arc1 → L → arc2 → L → arc3 → L → L
+				const sweep1 = dirToCenter > 0 ? 1 : 0;
+				const sweep2 = dirHoriz > 0 ? 1 : 0;
+				const sweep3 = dirToBlock > 0 ? 1 : 0;
 
 				const d =
-					`M ${startX} ${startY} ` +
-					`C ${c1x} ${c1y}, ${c2x} ${c2y}, ${blockCenterX} ${blockTopLocal}`;
+					`M ${P0x} ${P0y} ` +
+					// 1er quart de cercle
+					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep1} ${P1x} ${P1y} ` +
+					// barre horizontale vers le centre
+					`L ${P2x} ${P2y} ` +
+					// 2e quart de cercle vers le rail vertical
+					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep2} ${P3x} ${P3y} ` +
+					// descente verticale sous la légende
+					`L ${P4x} ${P4y} ` +
+					// 3e quart de cercle vers le bloc
+					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep3} ${P5x} ${P5y} ` +
+					// barre horizontale vers le centre du bloc
+					`L ${P6x} ${P6y} ` +
+					// descente verticale finale
+					`L ${P7x} ${P7y}`;
 
 				const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 				path.setAttribute("d", d);

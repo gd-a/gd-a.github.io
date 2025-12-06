@@ -379,6 +379,7 @@ permalink: /prairie/
 	}
 
 
+
 	.prairie-milestone-blocks-wrapper {
 		position: relative;
 		margin: 2.4rem 10% 0;
@@ -834,6 +835,8 @@ permalink: /prairie/
 			const secondaryEl = document.getElementById("prairie-journal-secondary");
 			const editorialEl = document.getElementById("prairie-journal-editorial-content");
 
+
+
 			if (!journal || !titleEl || !dateEl || !mainEl || !secondaryEl || !editorialEl) {
 				return;
 			}
@@ -878,7 +881,7 @@ permalink: /prairie/
 			});
 		}
 
-		// Connecteurs : 3 quarts de cercle (A) + segments droits
+		// Connecteurs : quarter-circles (A) + segments droits
 		function drawConnectors() {
 			const svg = document.getElementById("prairie-connectors");
 			const progressEl = document.querySelector(".prairie-progress");
@@ -917,29 +920,29 @@ permalink: /prairie/
 
 				const orderIndex = orderIndexById[ms.id] ?? idx;
 
-				// Décalage vertical supplémentaire de la première liaison :
-				// middle +5px, leftmost +10px, rightmost 0
+				// Décalage vertical supplémentaire : maintenant VERS LE HAUT (on soustrait)
 				let extraStart = 0;
-				if (orderIndex === 1) extraStart = 5;
-				if (orderIndex === 2) extraStart = 10;
+				if (orderIndex === 1) extraStart = 5;   // milieu
+				if (orderIndex === 2) extraStart = 10;  // gauche
 
-				// Bas visuel de la tige
 				const stemBottomY = mRect.bottom - rect.top;
 				const P0x = mRect.left + mRect.width / 2 - rect.left;
-				let P0y =
-					stemBottomY + 4 + 25 + orderIndex * VERTICAL_SHIFT + extraStart;
+				const baseP0y =
+					stemBottomY + 4 + 25 + orderIndex * VERTICAL_SHIFT;
+				// aller vers le HAUT
+				let P0y = baseP0y - extraStart;
 
 				// Colonne centrale pour ce connecteur
 				let baseColumnX =
 					centerX + (orderIndex - centerIndex) * BUNDLE_SPACING;
 
-				// Pour le lien le plus à droite, on réduit sa barre horizontale vers le centre de 15px
+				// Pour le lien le plus à droite, on réduit la barre horizontale vers le centre de 15px
 				if (orderIndex === 0) {
 					const sign = baseColumnX >= P0x ? 1 : -1;
 					baseColumnX -= sign * 15;
 				}
 
-				// Direction vers le centre (1 = droite, 0 = gauche)
+				// Direction vers le centre (1 = droite, -1 = gauche)
 				let dirToCenter = baseColumnX >= P0x ? 1 : -1;
 
 				// ==== 1er quart de cercle : bas de la tige → bas + côté vers le centre ====
@@ -958,17 +961,52 @@ permalink: /prairie/
 				const P3x = columnX;
 				const P3y = P2y + CURVE_RADIUS;
 
-				// Descente verticale au-delà de la légende, SANS réappliquer le décalage vertical
-				let P4x = columnX;
-				let P4y = Math.max(
-					P3y + CURVE_RADIUS,
-					legendBottomLocal + 20
-				);
-
-				// ==== 3e quart de cercle : rail vertical → côté du bloc ====
 				const blockCenterX = bRect.left + bRect.width / 2 - rect.left;
 				const blockTopLocal = bRect.top - rect.top;
 
+				// Cas spécial : lien du milieu (orderIndex === 1)
+				// → la barre verticale va directement jusqu’au bord supérieur du bloc
+				if (orderIndex === 1) {
+					const P4x = columnX;
+					const P4y = blockTopLocal; // directement jusqu’au bloc
+
+					const baseSweep1 = dirToCenter > 0 ? 1 : 0;
+					const sweep1 = 1 - baseSweep1; // inversé pour orienter correctement le haut
+
+					const baseSweep2 = dirHoriz > 0 ? 1 : 0;
+					const sweep2 = baseSweep2;     // le second quart reste comme avant
+
+					const d =
+						`M ${P0x} ${P0y} ` +
+						// 1er quart de cercle
+						`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep1} ${P1x} ${P1y} ` +
+						// barre horizontale
+						`L ${P2x} ${P2y} ` +
+						// 2e quart de cercle vers la verticale
+						`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep2} ${P3x} ${P3y} ` +
+						// barre verticale directement jusqu’au bloc
+						`L ${P4x} ${P4y}`;
+
+					const pathMid = document.createElementNS("http://www.w3.org/2000/svg", "path");
+					pathMid.setAttribute("d", d);
+					svg.appendChild(pathMid);
+					return;
+				}
+
+				// Autres cas : gauche (orderIndex = 2) et droite (orderIndex = 0)
+				// Descente verticale au-delà de la légende (rail central)
+				const P4Base = Math.max(
+					P3y + CURVE_RADIUS,
+					legendBottomLocal + 20
+				);
+				let P4y = P4Base;
+				if (orderIndex === 2) {
+					// Leftmost: vertical middle bar 5px shorter
+					P4y = Math.max(P3y + CURVE_RADIUS, P4Base - 5);
+				}
+				const P4x = columnX;
+
+				// ==== 3e quart de cercle : rail vertical → côté du bloc ====
 				const dirToBlock = blockCenterX >= P4x ? 1 : -1;
 				const P5x = P4x + dirToBlock * CURVE_RADIUS;
 				const P5y = P4y + CURVE_RADIUS;
@@ -981,18 +1019,15 @@ permalink: /prairie/
 				const P7x = blockCenterX;
 				const P7y = blockTopLocal;
 
-				// Construction du path : M → arc1 → L → arc2 → L → arc3 → L → L
-				// Top arc était inversé → on inverse le sweep1
+				// Sweeps :
 				const baseSweep1 = dirToCenter > 0 ? 1 : 0;
-				const sweep1 = 1 - baseSweep1;
+				const sweep1 = 1 - baseSweep1; // haut inversé
 
-				// 2e arc était correct → on garde sweep2
 				const baseSweep2 = dirHoriz > 0 ? 1 : 0;
-				const sweep2 = baseSweep2;
+				const sweep2 = baseSweep2;     // milieu OK
 
-				// 3e arc était inversé → on inverse sweep3
 				const baseSweep3 = dirToBlock > 0 ? 1 : 0;
-				const sweep3 = 1 - baseSweep3;
+				const sweep3 = 1 - baseSweep3; // bas inversé
 
 				const d =
 					`M ${P0x} ${P0y} ` +
@@ -1029,10 +1064,7 @@ permalink: /prairie/
 			}
 
 			window.addEventListener("resize", function () {
-
-
 				drawConnectors();
 			});
-		});
-	})();
+		})();
 </script>

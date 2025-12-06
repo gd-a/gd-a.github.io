@@ -1,72 +1,79 @@
 ---
 layout: default
-title: Prairial
-permalink: /prairial/
+title: prairie
+permalink: /prairie/
 ---
 
-<div class="prairial-root">
-	<section class="prairial-progress" aria-labelledby="prairial-heading">
-		<h1 id="prairial-heading" class="prairial-title">Prairial</h1>
+<div class="prairie-root">
+	<section class="prairie-progress" aria-labelledby="prairie-heading">
+		<!-- plus de <h1> : simple bloc de titre -->
+		<div id="prairie-heading" class="prairie-title">Prairie</div>
 
-		<div class="prairial-track" id="prairial-track" aria-hidden="false">
-			<!-- Ligne pointillée -->
-			<div class="prairial-line" aria-hidden="true"></div>
+		<div class="prairie-track" id="prairie-track" aria-hidden="false">
+			<!-- Ligne pointillée version sci-fi -->
+			<div class="prairie-line" aria-hidden="true"></div>
+
+			<!-- Portion déjà parcourue en trait plein -->
+			<div class="prairie-line-completed" aria-hidden="true"></div>
 
 			<!-- Extrémités -->
-			<div class="prairial-endpoint prairial-endpoint--left" aria-label="Arrivée"></div>
-			<div class="prairial-endpoint prairial-endpoint--right" aria-label="Départ"></div>
+			<div class="prairie-endpoint prairie-endpoint--left" aria-label="Arrivée"></div>
+			<div class="prairie-endpoint prairie-endpoint--right" aria-label="Départ"></div>
 
 			<!-- Curseur -->
-			<div class="prairial-pointer" id="prairial-pointer" aria-label="Position actuelle sur le trajet"></div>
+			<div class="prairie-pointer" id="prairie-pointer" aria-label="Position actuelle sur le trajet"></div>
 
 			<!-- Jalons injectés via JavaScript -->
 		</div>
 
-		<div class="prairial-legend">
-			<span id="prairial-date-label"></span>
-			<span id="prairial-distance-label"></span>
+		<div class="prairie-legend">
+			<span id="prairie-date-label"></span>
+			<span id="prairie-distance-label"></span>
 		</div>
 	</section>
 
 	<!-- Bloc "vieux journal" -->
-	<section id="prairial-journal" class="prairial-journal prairial-journal--hidden" aria-live="polite">
-		<header class="prairial-journal-header">
+	<section id="prairie-journal" class="prairie-journal prairie-journal--hidden" aria-live="polite">
+		<header class="prairie-journal-header">
 			<div>
-				<h2 id="prairial-journal-title"></h2>
-				<p id="prairial-journal-date" class="prairial-journal-date"></p>
+				<h2 id="prairie-journal-title"></h2>
+				<p id="prairie-journal-date" class="prairie-journal-date"></p>
 			</div>
-			<p class="prairial-journal-kicker">Feuille de route – édition spéciale</p>
+			<p class="prairie-journal-kicker">Feuille de route – édition spéciale</p>
 		</header>
 
-		<div class="prairial-journal-layout">
+		<div class="prairie-journal-layout">
 			<!-- Colonne principale (article sur deux colonnes + extrait) -->
-			<div class="prairial-journal-main">
-				<div id="prairial-journal-main-article" class="prairial-journal-main-article"></div>
-				<div id="prairial-journal-secondary" class="prairial-journal-secondary"></div>
+			<div class="prairie-journal-main">
+				<div id="prairie-journal-main-article" class="prairie-journal-main-article"></div>
+				<div id="prairie-journal-secondary" class="prairie-journal-secondary"></div>
 			</div>
 
 			<!-- Colonne édito (1/5 environ) -->
-			<aside class="prairial-journal-editorial">
-				<h3 class="prairial-journal-editorial-title">Édito</h3>
-				<div id="prairial-journal-editorial-content"></div>
+			<aside class="prairie-journal-editorial">
+				<h3 class="prairie-journal-editorial-title">Édito</h3>
+				<div id="prairie-journal-editorial-content"></div>
 			</aside>
 		</div>
 	</section>
 </div>
 
 <style>
+	/* === Styles prairie === */
+
 	:root {
 		/* 0 = départ (cercle rouge à droite), 1 = arrivée (cercle bleu à gauche) */
-		--prairial-progress: 0;
+		--prairie-progress: 0;
 	}
 
 	body {
 		margin: 0;
 		padding: 0;
-		background: #fdf9f0;
+		background: #000000;
+		color: #dddddd;
 	}
 
-	.prairial-root {
+	.prairie-root {
 		min-height: 100vh;
 		display: flex;
 		flex-direction: column;
@@ -74,117 +81,200 @@ permalink: /prairial/
 
 	/* Progression sur le tiers supérieur */
 
-	.prairial-progress {
-		max-width: 1200px;
+	.prairie-progress {
+		max-width: 100%;
+		width: 100%;
 		margin: 6vh auto 2vh;
-		padding: 0 6vw;
+		padding: 0;
 	}
 
-	.prairial-title {
-		margin: 0 0 2vh;
+	.prairie-title {
+		margin: 0 0 1.8vh 10%;
 		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 		font-weight: 500;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		font-size: 0.9rem;
-		color: #555;
+		color: #a0a0a0;
 	}
 
-	.prairial-track {
+	/* La piste s'étend sur toute la largeur, la trajectoire elle-même fait 80% */
+
+	.prairie-track {
 		position: relative;
+		width: 100%;
 		height: 12vh;
 		min-height: 90px;
 	}
 
-	/* Ligne pointillée */
+	/* Ligne pointillée futuriste (série de "capsules" arrondies) */
 
-	.prairial-line {
+	.prairie-line {
 		position: absolute;
 		top: 50%;
 		left: 10%;
-		right: 10%;
-		border-top: 6px dotted #b7b7b7;
+		width: 80%;
+		height: 8px;
 		transform: translateY(-50%);
+		background-image:
+			radial-gradient(circle,
+				rgba(190, 190, 190, 0.9) 0,
+				rgba(190, 190, 190, 0.9) 45%,
+				transparent 55%);
+		background-size: 24px 8px;
+		background-repeat: repeat-x;
+		opacity: 0.65;
+		border-radius: 999px;
+		filter: drop-shadow(0 0 6px rgba(200, 200, 200, 0.35));
 		z-index: 0;
+	}
+
+	/* Segment complété en trait plein, posé au-dessus de la ligne pointillée */
+
+	.prairie-line-completed {
+		position: absolute;
+		top: 50%;
+		left: 10%;
+		width: 80%;
+		height: 8px;
+		transform: translateY(-50%);
+		pointer-events: none;
+		z-index: 1;
+	}
+
+	.prairie-line-completed::before {
+		content: "";
+		position: absolute;
+		top: 50%;
+		right: 0;
+		transform: translateY(-50%);
+		height: 4px;
+		width: calc(var(--prairie-progress) * 100%);
+		background: linear-gradient(to left,
+				rgba(244, 138, 80, 0.95),
+				rgba(178, 220, 255, 0.95));
+		border-radius: 999px;
+		box-shadow:
+			0 0 12px rgba(240, 160, 100, 0.7),
+			0 0 18px rgba(160, 210, 255, 0.7);
 	}
 
 	/* Cercles d'extrémité */
 
-	.prairial-endpoint {
+	.prairie-endpoint {
 		position: absolute;
 		top: 50%;
 		transform: translate(-50%, -50%);
 		border-radius: 50%;
 	}
 
-	.prairial-endpoint--left {
+	.prairie-endpoint--left {
 		left: 10%;
 		width: 1.5vw;
 		height: 1.5vw;
 		min-width: 20px;
 		min-height: 20px;
-		background: #0b3c7d;
-		/* bleu foncé */
-		box-shadow: 0 0 0 3px rgba(5, 26, 56, 0.25);
+		background: #2f8bff;
+		/* bleu lumineux */
+		box-shadow:
+			0 0 10px rgba(80, 170, 255, 0.9),
+			0 0 22px rgba(80, 170, 255, 0.6);
 	}
 
-	.prairial-endpoint--right {
+	.prairie-endpoint--right {
 		left: 90%;
 		width: 1vw;
 		height: 1vw;
 		min-width: 16px;
 		min-height: 16px;
-		background: #e86a3c;
-		/* rouge/orangé */
-		box-shadow: 0 0 0 3px rgba(138, 46, 17, 0.25);
+		background: #ff7b45;
+		/* rouge/orangé lumineux */
+		box-shadow:
+			0 0 10px rgba(255, 136, 76, 0.9),
+			0 0 22px rgba(255, 136, 76, 0.6);
 	}
 
-	/* Curseur avec effet pulse */
+	/* Curseur légèrement plus petit, avec halo pulsé en doubles vagues fines */
 
-	.prairial-pointer {
+	.prairie-pointer {
 		position: absolute;
 		top: 50%;
 		/* progression de droite (rouge) vers gauche (bleu) */
-		left: calc(10% + (1 - var(--prairial-progress)) * 80%);
-		width: 1.8vw;
-		height: 1.8vw;
-		min-width: 24px;
-		min-height: 24px;
+		left: calc(10% + (1 - var(--prairie-progress)) * 80%);
+		width: 1.1vw;
+		height: 1.1vw;
+		min-width: 18px;
+		min-height: 18px;
 		border-radius: 50%;
-		background: #d3d3d3;
-		border: 3px solid #f6f6f6;
+		background: radial-gradient(circle at 30% 30%, #f9f9f9 0, #cacaca 38%, #6c6c6c 80%);
+		border: 3px solid #f3f3f3;
+		/* bordure légèrement plus large que les milestones */
 		transform: translate(-50%, -50%);
-		box-shadow: 0 0 0 0 rgba(150, 150, 150, 0.6);
-		animation: prairialPulse 2.6s infinite;
-		transition: left 1.2s ease-out;
-		z-index: 2;
+		z-index: 3;
+		overflow: visible;
 	}
 
-	@keyframes prairialPulse {
+	/* Vague principale (finie, rayon identique mais plus fine visuellement) */
+
+	.prairie-pointer::before,
+	.prairie-pointer::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: 50%;
+		border: 2px solid rgba(220, 220, 220, 0.5);
+		opacity: 0;
+	}
+
+	.prairie-pointer::before {
+		animation: prairiePulseSlow 2.8s ease-out infinite;
+	}
+
+	.prairie-pointer::after {
+		animation: prairiePulseFast 1.6s ease-out infinite;
+		animation-delay: 0.55s;
+	}
+
+	@keyframes prairiePulseSlow {
 		0% {
-			box-shadow: 0 0 0 0 rgba(150, 150, 150, 0.6);
-			transform: translate(-50%, -50%) scale(1);
+			transform: scale(1);
+			opacity: 0.8;
 		}
 
 		70% {
-			box-shadow: 0 0 0 18px rgba(150, 150, 150, 0);
-			transform: translate(-50%, -50%) scale(1.05);
+			transform: scale(1.9);
+			opacity: 0;
 		}
 
 		100% {
-			box-shadow: 0 0 0 0 rgba(150, 150, 150, 0);
-			transform: translate(-50%, -50%) scale(1);
+			opacity: 0;
+		}
+	}
+
+	@keyframes prairiePulseFast {
+		0% {
+			transform: scale(1);
+			opacity: 0.6;
+		}
+
+		60% {
+			transform: scale(1.9);
+			opacity: 0;
+		}
+
+		100% {
+			opacity: 0;
 		}
 	}
 
 	/* Jalons (milestones) */
 
-	.prairial-milestone {
-		--prairial-position: 0;
+	.prairie-milestone {
+		--prairie-position: 0;
 		position: absolute;
 		top: 50%;
 		/* même interpolation droite → gauche */
-		left: calc(10% + (1 - var(--prairial-position)) * 80%);
+		left: calc(10% + (1 - var(--prairie-position)) * 80%);
 		transform: translate(-50%, -50%);
 		width: 0.35vw;
 		height: 0.35vw;
@@ -193,88 +283,91 @@ permalink: /prairial/
 		border-radius: 50%;
 		border: 2px solid #f9ebcf;
 		/* bordure crème */
-		background: #9e9e9e;
+		background: #939393;
 		cursor: pointer;
-		z-index: 3;
+		z-index: 4;
 		padding: 0;
 		outline: none;
 	}
 
-	/* petite "tige" verticale */
+	/* petite "tige" verticale sous le jalon */
 
-	.prairial-milestone::after {
+	.prairie-milestone::after {
 		content: "";
 		position: absolute;
-		top: -7px;
+		top: 100%;
 		left: 50%;
 		width: 1px;
-		height: 7px;
+		height: 10px;
+		margin-top: 4px;
 		transform: translateX(-50%);
 		background: #6d6d6d;
 	}
 
-	.prairial-milestone:hover,
-	.prairial-milestone:focus-visible {
-		background: #e0e0e0;
-		box-shadow: 0 0 0 6px rgba(249, 235, 207, 0.7);
+	.prairie-milestone:hover,
+	.prairie-milestone:focus-visible {
+		background: #c3c3c3;
+		box-shadow: 0 0 0 6px rgba(249, 235, 207, 0.85);
 	}
 
-	.prairial-milestone--active {
+	.prairie-milestone--active {
 		background: #f9ebcf;
 	}
 
 	/* Légende (date + distance) */
 
-	.prairial-legend {
+	.prairie-legend {
 		margin-top: 0.8rem;
+		padding: 0 10%;
 		display: flex;
 		justify-content: space-between;
 		gap: 1rem;
 		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 		font-size: 0.85rem;
-		color: #555;
+		color: #b0b0b0;
 	}
 
-	.prairial-legend span {
+	.prairie-legend span {
 		white-space: nowrap;
 	}
 
-	/* Journal style vieux papier */
+	/* Journal style vieux papier, légèrement éclairci */
 
-	.prairial-journal {
+	.prairie-journal {
 		max-width: 960px;
 		margin: 4vh auto 10vh;
 		padding: 2.5rem 2.25rem 2.75rem;
-		background: #f4ead4;
+		background: #f8f0de;
+		/* éclairci */
 		border-radius: 4px;
 		box-shadow:
-			0 16px 28px rgba(0, 0, 0, 0.18),
-			0 0 0 1px rgba(104, 86, 54, 0.35);
+			0 18px 32px rgba(0, 0, 0, 0.5),
+			0 0 0 1px rgba(104, 86, 54, 0.4);
 		font-family: "Georgia", "Times New Roman", serif;
 		color: #30251a;
 	}
 
-	.prairial-journal--hidden {
+	.prairie-journal--hidden {
 		display: none;
 	}
 
-	.prairial-journal-header {
+	.prairie-journal-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-end;
-		border-bottom: 1px solid #d0c0a0;
+		border-bottom: 1px solid #d1c3a7;
 		padding-bottom: 0.75rem;
 		margin-bottom: 1.5rem;
 	}
 
-	.prairial-journal-header h2 {
+	.prairie-journal-header h2 {
 		margin: 0;
 		font-size: 1.6rem;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 	}
 
-	.prairial-journal-date {
+	.prairie-journal-date {
 		margin: 0.25rem 0 0;
 		font-size: 0.85rem;
 		letter-spacing: 0.18em;
@@ -282,7 +375,7 @@ permalink: /prairial/
 		color: #7c6a4d;
 	}
 
-	.prairial-journal-kicker {
+	.prairie-journal-kicker {
 		margin: 0;
 		font-size: 0.8rem;
 		letter-spacing: 0.2em;
@@ -290,7 +383,7 @@ permalink: /prairial/
 		color: #8a7451;
 	}
 
-	.prairial-journal-layout {
+	.prairie-journal-layout {
 		display: grid;
 		grid-template-columns: minmax(0, 4fr) minmax(0, 1fr);
 		column-gap: 2.25rem;
@@ -298,7 +391,7 @@ permalink: /prairial/
 
 	/* Article principal sur deux colonnes */
 
-	.prairial-journal-main-article {
+	.prairie-journal-main-article {
 		font-size: 0.96rem;
 		line-height: 1.7;
 		column-count: 2;
@@ -306,23 +399,40 @@ permalink: /prairial/
 		text-align: justify;
 	}
 
-	.prairial-journal-main-article p {
+	.prairie-journal-main-article p {
 		margin: 0 0 0.9rem;
+	}
+
+	/* Titres internes des articles */
+
+	.prairie-article-main-title,
+	.prairie-article-secondary-title {
+		font-family: "Georgia", "Times New Roman", serif;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		font-size: 0.98rem;
+		margin: 0 0 0.5rem;
+		color: #4c3b28;
+		column-span: all;
 	}
 
 	/* Extrait d’article secondaire (coupé) */
 
-	.prairial-journal-secondary {
+	.prairie-journal-secondary {
 		margin-top: 1.6rem;
 		padding-top: 0.75rem;
-		border-top: 1px solid #d0c0a0;
+		border-top: 1px solid #d1c3a7;
 		font-size: 0.9rem;
 		line-height: 1.6;
 		text-align: justify;
 		position: relative;
 	}
 
-	.prairial-journal-secondary::after {
+	.prairie-journal-secondary p {
+		margin: 0 0 0.7rem;
+	}
+
+	.prairie-journal-secondary::after {
 		/* effet "il faut tourner la page" */
 		content: "…";
 		position: absolute;
@@ -334,14 +444,14 @@ permalink: /prairial/
 
 	/* Colonne édito ~1/5 */
 
-	.prairial-journal-editorial {
-		border-left: 1px solid #d0c0a0;
+	.prairie-journal-editorial {
+		border-left: 1px solid #d1c3a7;
 		padding-left: 1.4rem;
 		font-size: 0.88rem;
 		line-height: 1.6;
 	}
 
-	.prairial-journal-editorial-title {
+	.prairie-journal-editorial-title {
 		margin: 0 0 0.6rem;
 		font-size: 0.9rem;
 		letter-spacing: 0.18em;
@@ -349,41 +459,40 @@ permalink: /prairial/
 		color: #7c6a4d;
 	}
 
-	.prairial-journal-editorial p {
+	.prairie-journal-editorial p {
 		margin: 0 0 0.8rem;
 	}
 
 	/* Adaptation responsive */
 
 	@media (max-width: 900px) {
-		.prairial-journal-layout {
+		.prairie-journal-layout {
 			grid-template-columns: 1fr;
 			row-gap: 1.75rem;
 		}
 
-		.prairial-journal-editorial {
+		.prairie-journal-editorial {
 			border-left: none;
-			border-top: 1px solid #d0c0a0;
+			border-top: 1px solid #d1c3a7;
 			padding-left: 0;
 			padding-top: 1rem;
 		}
 
-		.prairial-journal-main-article {
+		.prairie-journal-main-article {
 			column-count: 1;
 		}
 	}
 
 	@media (max-width: 600px) {
-		.prairial-progress {
+		.prairie-progress {
 			margin-top: 5vh;
-			padding-inline: 4vw;
 		}
 
-		.prairial-track {
+		.prairie-track {
 			min-height: 80px;
 		}
 
-		.prairial-legend {
+		.prairie-legend {
 			flex-direction: column;
 			align-items: flex-start;
 		}
@@ -391,6 +500,7 @@ permalink: /prairial/
 </style>
 
 <script>
+	// === Logique Prairie  ===
 
 	(function () {
 		// Dates clés du trajet (en UTC pour éviter les surprises de fuseaux)
@@ -438,13 +548,13 @@ permalink: /prairial/
 
 			// Mise à jour de la variable CSS pour la position du curseur
 			document.documentElement.style.setProperty(
-				"--prairial-progress",
+				"--prairie-progress",
 				progress.toString()
 			);
 
 			// Mise à jour de la légende (date courante + distance)
-			const dateLabel = document.getElementById("prairial-date-label");
-			const distanceLabel = document.getElementById("prairial-distance-label");
+			const dateLabel = document.getElementById("prairie-date-label");
+			const distanceLabel = document.getElementById("prairie-distance-label");
 
 			if (dateLabel) {
 				dateLabel.textContent = "Aujourd’hui : " + dateFormatter.format(now);
@@ -471,11 +581,13 @@ permalink: /prairial/
 				label: "26 septembre 2025",
 				title: "Gazette interplanétaire",
 				main: `
+        <h3 class="prairie-article-main-title">Chronique d’un départ déjà lointain</h3>
         <p>Ce matin-là, les cadrans indiquaient à peine l’équinoxe que déjà les regards se tournaient vers la trajectoire. Sur le papier, tout semblait figé : neuf mois de route, des millions de kilomètres, et pourtant une impression étrange de glissement continu, comme si le temps lui-même se laissait lentement étirer.</p>
         <p>Les premiers rapports mentionnent un calme presque suspect. Aucune turbulence notable, seulement la mécanique silencieuse d’un voyage bien préparé. Mais entre les lignes, on devine déjà les infimes décalages, ces gestes anodins qui, un jour, feront récit : une note griffonnée au verso, un calcul rectifié, un soupir retenu devant un écran trop lumineux.</p>
         <p>Pour l’instant, les chronomètres avancent en cadence, et l’on se surprend à écouter le souffle discret de la machine. Le départ est derrière, l’arrivée demeure compacte, lointaine. Entre les deux, une simple promesse : le ruban gris d’un trajet qui commence à peine à se dérouler.</p>
       `,
 				secondary: `
+        <h4 class="prairie-article-secondary-title">Brève de marge</h4>
         <p>Dans la marge d’un carnet, quelqu’un a tracé une petite orbite excentrée. Rien d’officiel, bien sûr, juste une hypothèse notée à la hâte : et si la route, au lieu d’être un trait, était déjà un souvenir en train de se réécrire&nbsp;?</p>
       `,
 				editorial: `
@@ -489,11 +601,13 @@ permalink: /prairial/
 				label: "1 décembre 2025",
 				title: "Chronique en saison froide",
 				main: `
+        <h3 class="prairie-article-main-title">Échos d’un trajet en veille</h3>
         <p>Avec l’entrée dans les jours les plus courts, la progression n’en paraît que plus abstraite. Les chiffres s’alignent pourtant avec une précision obstinée : des millions de kilomètres déjà franchis, un pourcentage qui grimpe, lentement, vers l’horizon du printemps.</p>
         <p>Dans les rapports, on évoque la monotonie apparente du trajet. Ce n’est ni un drame, ni une épopée, mais quelque chose de plus subtil : une patience organisée. On vérifie les instruments, on recale les horloges, on guette les infimes écarts comme on écouterait une note légèrement fausse dans une mélodie répétée.</p>
         <p>À cette étape, il devient clair que la route n’est pas qu’une distance à parcourir, mais un cadre imposé à l’attention. Ce que l’on choisit d’y placer — pensées, récits, projets, rêveries — finit par donner au voyage sa véritable texture.</p>
       `,
 				secondary: `
+        <h4 class="prairie-article-secondary-title">Coupure hivernale</h4>
         <p>Une petite coupure, en bas de colonne, signale un détail presque anodin&nbsp;: les observateurs ont noté une légère accélération du temps ressenti. Les journées paraissent plus brèves, les semaines glissent comme des feuilles fines, tournées un peu trop vite.</p>
       `,
 				editorial: `
@@ -507,11 +621,13 @@ permalink: /prairial/
 				label: "11 février 2026",
 				title: "Édition de mi-parcours",
 				main: `
+        <h3 class="prairie-article-main-title">Au cœur de la distance</h3>
         <p>À mi-chemin ou presque, la ligne de pointillés cesse d’être une abstraction&nbsp;: on en a déjà parcouru une bonne part, et l’on devine la portion restante comme une saignée claire dans l’avenir proche. Le curseur grisé pulse désormais avec la régularité rassurante d’un métronome.</p>
         <p>Les récits internes parlent d’ajustements minuscules, invisibles au lecteur pressé. Pourtant, ce sont ces corrections-là qui sculptent la trajectoire : un recalage de quelques heures, une réévaluation silencieuse d’objectifs intermédiaires, une façon plus fine de lire ce que disent vraiment les mesures.</p>
         <p>On sent poindre une légère impatience, mêlée à une forme de tendresse pour le trajet lui-même. On sait qu’il finira, et c’est peut-être cela qui le rend si étrange&nbsp;: chaque pointillé, déjà derrière, a eu son moment précis pour exister.</p>
       `,
 				secondary: `
+        <h4 class="prairie-article-secondary-title">Note de mi-course</h4>
         <p>Une brève note, presque perdue dans la maquette, suggère qu’il serait temps de préparer l’arrivée. Pas en la précipitant, mais en apprenant à regarder la distance restante comme un espace encore habitable, et non comme un simple retard à combler.</p>
       `,
 				editorial: `
@@ -522,19 +638,19 @@ permalink: /prairial/
 		];
 
 		function createMilestones() {
-			const track = document.getElementById("prairial-track");
+			const track = document.getElementById("prairie-track");
 			if (!track) return;
 
 			milestoneConfig.forEach((ms) => {
 				const button = document.createElement("button");
 				button.type = "button";
-				button.className = "prairial-milestone";
+				button.className = "prairie-milestone";
 				button.setAttribute("aria-label", ms.label);
 				button.title = ms.label;
 
 				// Position le jalon selon la date correspondante
 				const frac = progressFor(ms.date);
-				button.style.setProperty("--prairial-position", frac.toString());
+				button.style.setProperty("--prairie-position", frac.toString());
 
 				button.dataset.milestoneId = ms.id;
 
@@ -550,12 +666,12 @@ permalink: /prairial/
 			const data = milestoneConfig.find((m) => m.id === id);
 			if (!data) return;
 
-			const journal = document.getElementById("prairial-journal");
-			const titleEl = document.getElementById("prairial-journal-title");
-			const dateEl = document.getElementById("prairial-journal-date");
-			const mainEl = document.getElementById("prairial-journal-main-article");
-			const secondaryEl = document.getElementById("prairial-journal-secondary");
-			const editorialEl = document.getElementById("prairial-journal-editorial-content");
+			const journal = document.getElementById("prairie-journal");
+			const titleEl = document.getElementById("prairie-journal-title");
+			const dateEl = document.getElementById("prairie-journal-date");
+			const mainEl = document.getElementById("prairie-journal-main-article");
+			const secondaryEl = document.getElementById("prairie-journal-secondary");
+			const editorialEl = document.getElementById("prairie-journal-editorial-content");
 
 			if (!journal || !titleEl || !dateEl || !mainEl || !secondaryEl || !editorialEl) {
 				return;
@@ -567,13 +683,13 @@ permalink: /prairial/
 			secondaryEl.innerHTML = data.secondary;
 			editorialEl.innerHTML = data.editorial;
 
-			journal.classList.remove("prairial-journal--hidden");
+			journal.classList.remove("prairie-journal--hidden");
 
 			// Marque visuellement le jalon actif
-			const allMilestones = document.querySelectorAll(".prairial-milestone");
+			const allMilestones = document.querySelectorAll(".prairie-milestone");
 			allMilestones.forEach((el) => {
 				el.classList.toggle(
-					"prairial-milestone--active",
+					"prairie-milestone--active",
 					el.dataset.milestoneId === id
 				);
 			});

@@ -25,15 +25,17 @@ permalink: /prairie/
 			<!-- Jalons injectés via JavaScript -->
 		</div>
 
-		<!-- Bloc des cartes d’étapes + connecteurs -->
-		<div class="prairie-milestone-blocks-wrapper">
-			<svg id="prairie-connectors" class="prairie-connectors" aria-hidden="true" preserveAspectRatio="none"></svg>
-			<div class="prairie-milestone-blocks" id="prairie-milestone-blocks" aria-label="Étapes du trajet"></div>
-		</div>
-
 		<div class="prairie-legend">
 			<span id="prairie-date-label"></span>
 			<span id="prairie-distance-label"></span>
+		</div>
+
+		<!-- Connecteurs (courbes) entre jalons et blocs -->
+		<svg id="prairie-connectors" class="prairie-connectors" aria-hidden="true" preserveAspectRatio="none"></svg>
+
+		<!-- Bloc des cartes d’étapes -->
+		<div class="prairie-milestone-blocks-wrapper">
+			<div class="prairie-milestone-blocks" id="prairie-milestone-blocks" aria-label="Étapes du trajet"></div>
 		</div>
 	</section>
 
@@ -114,7 +116,7 @@ permalink: /prairie/
 	.prairie-progress {
 		max-width: 100%;
 		width: 100%;
-		margin: 6vh auto 2vh;
+		margin: 6vh auto 4vh;
 		padding: 0;
 		position: relative;
 		/* pour le SVG des connecteurs */
@@ -127,6 +129,7 @@ permalink: /prairie/
 		width: 100%;
 		height: 12vh;
 		min-height: 90px;
+		z-index: 3;
 	}
 
 	/* Ligne pointillée futuriste – affinée pour matcher la barre, pattern 8px x 4px */
@@ -191,7 +194,7 @@ permalink: /prairie/
 		/* au-dessus de la barre de progression */
 	}
 
-	/* Bleu / arrivée à gauche (comme au début) */
+	/* Bleu / arrivée à gauche */
 	.prairie-endpoint--left {
 		left: 10%;
 		width: 1.5vw;
@@ -287,13 +290,13 @@ permalink: /prairie/
 		}
 	}
 
-	/* Jalons (milestones) – décoratifs, plus cliquables */
+	/* Jalons (milestones) – décoratifs, non cliquables */
 
 	.prairie-milestone {
 		--prairie-position: 0;
 		position: absolute;
 		top: 50%;
-		/* même interpolation droite → gauche (0 = droite / départ, 1 = gauche / arrivée) */
+		/* interpolation droite → gauche (0 = droite / départ, 1 = gauche / arrivée) */
 		left: calc(10% + (1 - var(--prairie-position)) * 80%);
 		transform: translate(-50%, -50%);
 		width: 0.35vw;
@@ -308,10 +311,9 @@ permalink: /prairie/
 		padding: 0;
 		outline: none;
 		pointer-events: none;
-		/* non cliquables */
 	}
 
-	/* "Tige" verticale sous le jalon, plus longue pour bien rejoindre la zone des connecteurs */
+	/* "Tige" verticale sous le jalon, vers les connecteurs */
 
 	.prairie-milestone::after {
 		content: "";
@@ -332,7 +334,7 @@ permalink: /prairie/
 	/* Légende (date + distance) */
 
 	.prairie-legend {
-		margin-top: 1.5rem;
+		margin-top: 1rem;
 		padding: 0 10%;
 		display: flex;
 		justify-content: space-between;
@@ -340,6 +342,8 @@ permalink: /prairie/
 		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 		font-size: 0.85rem;
 		color: #b0b0b0;
+		z-index: 3;
+		position: relative;
 	}
 
 	.prairie-legend span {
@@ -348,20 +352,15 @@ permalink: /prairie/
 
 	/* === Blocs d’étapes + connecteurs === */
 
-	.prairie-milestone-blocks-wrapper {
-		position: relative;
-		margin: 2.4rem 10% 0;
-	}
-
 	.prairie-connectors {
 		position: absolute;
-		top: -2.6rem;
-		/* remonte sous les jalons */
+		top: 0;
 		left: 0;
 		width: 100%;
-		height: calc(100% + 2.6rem);
+		height: 100%;
 		pointer-events: none;
 		overflow: visible;
+		z-index: 2;
 	}
 
 	.prairie-connectors path {
@@ -371,6 +370,12 @@ permalink: /prairie/
 		stroke-linecap: round;
 		stroke-linejoin: round;
 		filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.12));
+	}
+
+	.prairie-milestone-blocks-wrapper {
+		position: relative;
+		margin: 2.4rem 10% 0;
+		z-index: 3;
 	}
 
 	.prairie-milestone-blocks {
@@ -644,9 +649,15 @@ permalink: /prairie/
 			year: "numeric"
 		});
 
-		const numberFormatter = new Intl.NumberFormat("fr-FR", {
+		// Millions de km pour l'affichage "aujourd'hui"
+		const numberFormatterMillions = new Intl.NumberFormat("fr-FR", {
 			minimumFractionDigits: 1,
 			maximumFractionDigits: 1
+		});
+
+		// Km entiers pour le hover "précis"
+		const kmFormatter = new Intl.NumberFormat("fr-FR", {
+			maximumFractionDigits: 0
 		});
 
 		function progressFor(date) {
@@ -660,6 +671,35 @@ permalink: /prairie/
 			return elapsed / total; // 0 → départ (rouge, droite), 1 → arrivée (bleu, gauche)
 		}
 
+		function setLegend(date, progress, mode) {
+			const dateLabel = document.getElementById("prairie-date-label");
+			const distanceLabel = document.getElementById("prairie-distance-label");
+			if (!dateLabel || !distanceLabel) return;
+
+			const traveledKm = totalDistanceKm * progress;
+
+			if (mode === "hover") {
+				dateLabel.textContent = "Position : " + dateFormatter.format(date);
+
+				distanceLabel.textContent =
+					kmFormatter.format(traveledKm) +
+					" km / " +
+					kmFormatter.format(totalDistanceKm) +
+					" km";
+			} else {
+				dateLabel.textContent = "Aujourd’hui : " + dateFormatter.format(date);
+
+				const traveledMillions = traveledKm / 1e6;
+				const totalMillions = totalDistanceKm / 1e6;
+
+				distanceLabel.textContent =
+					numberFormatterMillions.format(traveledMillions) +
+					" / " +
+					numberFormatterMillions.format(totalMillions) +
+					" millions de km";
+			}
+		}
+
 		function updateProgress() {
 			const now = USE_MANUAL_DATE ? MANUAL_DATE : new Date();
 			const progress = progressFor(now);
@@ -670,25 +710,36 @@ permalink: /prairie/
 				progress.toString()
 			);
 
-			// Mise à jour de la légende (date courante + distance)
-			const dateLabel = document.getElementById("prairie-date-label");
-			const distanceLabel = document.getElementById("prairie-distance-label");
+			setLegend(now, progress, "today");
+		}
 
-			if (dateLabel) {
-				dateLabel.textContent = "Aujourd’hui : " + dateFormatter.format(now);
-			}
+		function handleTrackHover(ev) {
+			const track = document.getElementById("prairie-track");
+			if (!track) return;
 
-			if (distanceLabel) {
-				const traveledKm = totalDistanceKm * progress;
-				const traveledMillions = traveledKm / 1e6;
-				const totalMillions = totalDistanceKm / 1e6;
+			const rect = track.getBoundingClientRect();
+			if (rect.width <= 0) return;
 
-				distanceLabel.textContent =
-					numberFormatter.format(traveledMillions) +
-					" / " +
-					numberFormatter.format(totalMillions) +
-					" millions de km";
-			}
+			// Position relative sur la largeur de la piste (0 = gauche, 1 = droite)
+			let rel = (ev.clientX - rect.left) / rect.width;
+
+			// Limiter aux extrémités de la ligne (10% → 90%)
+			const min = 0.1;
+			const max = 0.9;
+			if (rel < min) rel = min;
+			if (rel > max) rel = max;
+
+			// 0 = extrême gauche (bleu / arrivée), 1 = extrême droite (rouge / départ)
+			const along = (rel - min) / (max - min);
+
+			// Progression temporelle : 0 = départ (droite), 1 = arrivée (gauche)
+			const progress = 1 - along;
+
+			const totalMs = endDate.getTime() - startDate.getTime();
+			const dateMs = startDate.getTime() + progress * totalMs;
+			const d = new Date(dateMs);
+
+			setLegend(d, progress, "hover");
 		}
 
 		// Configuration des jalons/milestones
@@ -755,7 +806,7 @@ permalink: /prairie/
 			}
 		];
 
-		// Tri chronologique (du plus ancien au plus récent)
+		// Tri chronologique (du plus ancien au plus récent) pour les blocs (gauche → droite)
 		const sortedMilestones = [...milestoneConfig].sort(
 			(a, b) => a.date.getTime() - b.date.getTime()
 		);
@@ -771,13 +822,11 @@ permalink: /prairie/
 				button.setAttribute("aria-label", ms.label);
 				button.title = ms.label;
 
-				// Position le jalon selon la date correspondante
+				// Position du jalon selon la date correspondante
 				const frac = progressFor(ms.date);
 				button.style.setProperty("--prairie-position", frac.toString());
 
 				button.dataset.milestoneId = ms.id;
-
-				// plus de click ici (décoratifs)
 
 				track.appendChild(button);
 			});
@@ -812,8 +861,6 @@ permalink: /prairie/
 
 			const journal = document.getElementById("prairie-journal");
 			const titleEl = document.getElementById("prairie-journal-title");
-
-
 			const dateEl = document.getElementById("prairie-journal-date");
 			const mainEl = document.getElementById("prairie-journal-main-article");
 			const secondaryEl = document.getElementById("prairie-journal-secondary");
@@ -839,6 +886,8 @@ permalink: /prairie/
 					el.dataset.milestoneId === id
 				);
 			});
+
+
 
 			const allBlocks = document.querySelectorAll(".prairie-milestone-block");
 			allBlocks.forEach((el) => {
@@ -866,21 +915,25 @@ permalink: /prairie/
 
 		function drawConnectors() {
 			const svg = document.getElementById("prairie-connectors");
-			const progress = document.querySelector(".prairie-progress");
-			if (!svg || !progress) return;
+			const progressEl = document.querySelector(".prairie-progress");
+			if (!svg || !progressEl) return;
 
-			const progressRect = progress.getBoundingClientRect();
+			const rect = progressEl.getBoundingClientRect();
 
-			// Adapter la taille du SVG à la section
-			svg.setAttribute("width", progressRect.width);
-			svg.setAttribute("height", progressRect.height);
+			svg.setAttribute("width", rect.width);
+			svg.setAttribute("height", rect.height);
 
 			// Nettoyer les anciens chemins
 			while (svg.firstChild) {
 				svg.removeChild(svg.firstChild);
 			}
 
-			sortedMilestones.forEach((ms) => {
+			const centerX = rect.width / 2;
+			const count = sortedMilestones.length;
+			const centerIndex = (count - 1) / 2;
+			const spread = 60; // écart latéral entre les courbes au centre
+
+			sortedMilestones.forEach((ms, index) => {
 				const milestoneEl = document.querySelector(
 					`.prairie-milestone[data-milestone-id="${ms.id}"]`
 				);
@@ -893,19 +946,27 @@ permalink: /prairie/
 				const mRect = milestoneEl.getBoundingClientRect();
 				const bRect = blockEl.getBoundingClientRect();
 
-				// Point de départ : un peu sous la tige du jalon
-				const x1 = mRect.left + mRect.width / 2 - progressRect.left;
-				const y1 = mRect.bottom - progressRect.top + 30;
+				// Point de départ : juste sous le bas du jalon
+				const x1 = mRect.left + mRect.width / 2 - rect.left;
+				const y1 = mRect.bottom - rect.top + 8;
 
 				// Point d'arrivée : juste au-dessus du bloc
-				const x2 = bRect.left + bRect.width / 2 - progressRect.left;
-				const y2 = bRect.top - progressRect.top - 10;
+				const x2 = bRect.left + bRect.width / 2 - rect.left;
+				const y2 = bRect.top - rect.top - 8;
 
-				const deltaY = (y2 - y1) / 2;
+				const midX =
+					centerX + (index - centerIndex) * spread; // croisement près du centre
+				const midY = (y1 + y2) / 2;
+
+				// Points de contrôle pour courbes cubiques "douces"
+				const c1x = (x1 + midX) / 2;
+				const c1y = y1 + (midY - y1) * 0.8;
+
+				const c2x = (x2 + midX) / 2;
+				const c2y = y2 - (y2 - midY) * 0.8;
 
 				const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-				const d = `M ${x1} ${y1} C ${x1} ${y1 + deltaY}, ${x2} ${y2 - deltaY
-					}, ${x2} ${y2}`;
+				const d = `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
 				path.setAttribute("d", d);
 
 				svg.appendChild(path);
@@ -922,6 +983,12 @@ permalink: /prairie/
 			const closeBtn = document.getElementById("prairie-journal-close");
 			if (closeBtn) {
 				closeBtn.addEventListener("click", closeJournal);
+			}
+
+			const track = document.getElementById("prairie-track");
+			if (track) {
+				track.addEventListener("mousemove", handleTrackHover);
+				track.addEventListener("mouseleave", updateProgress);
 			}
 
 			// Recalcul des connecteurs au resize

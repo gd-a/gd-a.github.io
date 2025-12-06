@@ -22,6 +22,9 @@ permalink: /prairie/
 			<!-- Curseur -->
 			<div class="prairie-pointer" id="prairie-pointer" aria-label="Position actuelle sur le trajet"></div>
 
+			<!-- Tooltip précision km (uniquement sur la piste) -->
+			<div class="prairie-track-tooltip" id="prairie-track-tooltip" aria-hidden="true"></div>
+
 			<!-- Jalons injectés via JavaScript -->
 		</div>
 
@@ -288,6 +291,30 @@ permalink: /prairie/
 		100% {
 			opacity: 0;
 		}
+	}
+
+	/* Tooltip de précision km (clique sur la piste) */
+
+	.prairie-track-tooltip {
+		position: absolute;
+		top: 15%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		padding: 0.25rem 0.55rem;
+		background: rgba(10, 10, 10, 0.92);
+		border-radius: 4px;
+		border: 1px solid #3a3a3a;
+		font-size: 0.7rem;
+		color: #f5f5f5;
+		pointer-events: none;
+		white-space: nowrap;
+		opacity: 0;
+		transition: opacity 0.15s ease-out;
+		z-index: 5;
+	}
+
+	.prairie-track-tooltip--visible {
+		opacity: 1;
 	}
 
 	/* Jalons (milestones) – décoratifs, non cliquables */
@@ -572,6 +599,8 @@ permalink: /prairie/
 
 	.prairie-journal-editorial-title {
 		margin: 0 0 0.6rem;
+
+
 		font-size: 0.9rem;
 		letter-spacing: 0.18em;
 		text-transform: uppercase;
@@ -649,13 +678,13 @@ permalink: /prairie/
 			year: "numeric"
 		});
 
-		// Millions de km pour l'affichage "aujourd'hui"
+		// Millions de km pour la légende "Aujourd’hui"
 		const numberFormatterMillions = new Intl.NumberFormat("fr-FR", {
 			minimumFractionDigits: 1,
 			maximumFractionDigits: 1
 		});
 
-		// Km entiers pour le hover "précis"
+		// Km entiers pour le compteur précis sur la piste
 		const kmFormatter = new Intl.NumberFormat("fr-FR", {
 			maximumFractionDigits: 0
 		});
@@ -671,35 +700,6 @@ permalink: /prairie/
 			return elapsed / total; // 0 → départ (rouge, droite), 1 → arrivée (bleu, gauche)
 		}
 
-		function setLegend(date, progress, mode) {
-			const dateLabel = document.getElementById("prairie-date-label");
-			const distanceLabel = document.getElementById("prairie-distance-label");
-			if (!dateLabel || !distanceLabel) return;
-
-			const traveledKm = totalDistanceKm * progress;
-
-			if (mode === "hover") {
-				dateLabel.textContent = "Position : " + dateFormatter.format(date);
-
-				distanceLabel.textContent =
-					kmFormatter.format(traveledKm) +
-					" km / " +
-					kmFormatter.format(totalDistanceKm) +
-					" km";
-			} else {
-				dateLabel.textContent = "Aujourd’hui : " + dateFormatter.format(date);
-
-				const traveledMillions = traveledKm / 1e6;
-				const totalMillions = totalDistanceKm / 1e6;
-
-				distanceLabel.textContent =
-					numberFormatterMillions.format(traveledMillions) +
-					" / " +
-					numberFormatterMillions.format(totalMillions) +
-					" millions de km";
-			}
-		}
-
 		function updateProgress() {
 			const now = USE_MANUAL_DATE ? MANUAL_DATE : new Date();
 			const progress = progressFor(now);
@@ -710,26 +710,45 @@ permalink: /prairie/
 				progress.toString()
 			);
 
-			setLegend(now, progress, "today");
+			// Mise à jour de la légende (date courante + distance en millions de km)
+			const dateLabel = document.getElementById("prairie-date-label");
+			const distanceLabel = document.getElementById("prairie-distance-label");
+			if (!dateLabel || !distanceLabel) return;
+
+			dateLabel.textContent = "Aujourd’hui : " + dateFormatter.format(now);
+
+			const traveledKm = totalDistanceKm * progress;
+			const traveledMillions = traveledKm / 1e6;
+
+
+			const totalMillions = totalDistanceKm / 1e6;
+
+			distanceLabel.textContent =
+				numberFormatterMillions.format(traveledMillions) +
+				" / " +
+				numberFormatterMillions.format(totalMillions) +
+				" millions de km";
 		}
 
-		function handleTrackHover(ev) {
+		// Compteur précis sur clic sur la piste (affiché uniquement sur la piste)
+		function handleTrackClick(ev) {
 			const track = document.getElementById("prairie-track");
-			if (!track) return;
+			const tooltip = document.getElementById("prairie-track-tooltip");
+			if (!track || !tooltip) return;
 
 			const rect = track.getBoundingClientRect();
 			if (rect.width <= 0) return;
 
 			// Position relative sur la largeur de la piste (0 = gauche, 1 = droite)
 			let rel = (ev.clientX - rect.left) / rect.width;
-
-			// Limiter aux extrémités de la ligne (10% → 90%)
 			const min = 0.1;
+
+
 			const max = 0.9;
 			if (rel < min) rel = min;
 			if (rel > max) rel = max;
 
-			// 0 = extrême gauche (bleu / arrivée), 1 = extrême droite (rouge / départ)
+			// along = 0 à gauche (arrivée / bleu), 1 à droite (départ / rouge)
 			const along = (rel - min) / (max - min);
 
 			// Progression temporelle : 0 = départ (droite), 1 = arrivée (gauche)
@@ -738,8 +757,18 @@ permalink: /prairie/
 			const totalMs = endDate.getTime() - startDate.getTime();
 			const dateMs = startDate.getTime() + progress * totalMs;
 			const d = new Date(dateMs);
+			const traveledKm = totalDistanceKm * progress;
 
-			setLegend(d, progress, "hover");
+			tooltip.textContent =
+				dateFormatter.format(d) +
+				" • " +
+				kmFormatter.format(traveledKm) +
+				" km";
+
+			const xLocal = rel * rect.width;
+			tooltip.style.left = xLocal + "px";
+			tooltip.setAttribute("aria-hidden", "false");
+			tooltip.classList.add("prairie-track-tooltip--visible");
 		}
 
 		// Configuration des jalons/milestones
@@ -806,7 +835,7 @@ permalink: /prairie/
 			}
 		];
 
-		// Tri chronologique (du plus ancien au plus récent) pour les blocs (gauche → droite)
+		// Tri chronologique (du plus ancien au plus récent) pour l’ordre des blocs
 		const sortedMilestones = [...milestoneConfig].sort(
 			(a, b) => a.date.getTime() - b.date.getTime()
 		);
@@ -887,8 +916,6 @@ permalink: /prairie/
 				);
 			});
 
-
-
 			const allBlocks = document.querySelectorAll(".prairie-milestone-block");
 			allBlocks.forEach((el) => {
 				el.classList.toggle(
@@ -916,9 +943,11 @@ permalink: /prairie/
 		function drawConnectors() {
 			const svg = document.getElementById("prairie-connectors");
 			const progressEl = document.querySelector(".prairie-progress");
-			if (!svg || !progressEl) return;
+			const legendEl = document.querySelector(".prairie-legend");
+			if (!svg || !progressEl || !legendEl) return;
 
 			const rect = progressEl.getBoundingClientRect();
+			const legendRect = legendEl.getBoundingClientRect();
 
 			svg.setAttribute("width", rect.width);
 			svg.setAttribute("height", rect.height);
@@ -930,8 +959,25 @@ permalink: /prairie/
 
 			const centerX = rect.width / 2;
 			const count = sortedMilestones.length;
+			if (count === 0) return;
 			const centerIndex = (count - 1) / 2;
-			const spread = 60; // écart latéral entre les courbes au centre
+			const bundleSpacing = 5;
+			const radiusBase = 24;
+			const radiusStep = 5;
+			const BAR_EXTRA = 44; // 4 (margin-top) + 40 (height) de la tige
+			const legendBottomLocal = legendRect.bottom - rect.top;
+			const k = 0.55; // facteur de courbure pour les 90°
+
+			function quarterDownToHorizontalSegment(sx, sy, dir, R) {
+				const ex = sx + dir * R;
+				const ey = sy + R;
+				const c1x = sx;
+				const c1y = sy + k * R;
+				const c2x = ex;
+				const c2y = ey - k * R;
+				const seg = `C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`;
+				return { seg, ex, ey };
+			}
 
 			sortedMilestones.forEach((ms, index) => {
 				const milestoneEl = document.querySelector(
@@ -946,29 +992,49 @@ permalink: /prairie/
 				const mRect = milestoneEl.getBoundingClientRect();
 				const bRect = blockEl.getBoundingClientRect();
 
-				// Point de départ : juste sous le bas du jalon
-				const x1 = mRect.left + mRect.width / 2 - rect.left;
-				const y1 = mRect.bottom - rect.top + 8;
+				const startX = mRect.left + mRect.width / 2 - rect.left;
+				const startY = mRect.bottom - rect.top + BAR_EXTRA;
 
-				// Point d'arrivée : juste au-dessus du bloc
-				const x2 = bRect.left + bRect.width / 2 - rect.left;
-				const y2 = bRect.top - rect.top - 8;
+				const bundleX = centerX + (index - centerIndex) * bundleSpacing;
+				const radius = radiusBase + radiusStep * index;
 
-				const midX =
-					centerX + (index - centerIndex) * spread; // croisement près du centre
-				const midY = (y1 + y2) / 2;
+				const blockCenterX = bRect.left + bRect.width / 2 - rect.left;
+				const blockTopLocal = bRect.top - rect.top;
 
-				// Points de contrôle pour courbes cubiques "douces"
-				const c1x = (x1 + midX) / 2;
-				const c1y = y1 + (midY - y1) * 0.8;
+				let d = `M ${startX} ${startY}`;
 
-				const c2x = (x2 + midX) / 2;
-				const c2y = y2 - (y2 - midY) * 0.8;
+				// 1) à partir du bas de la tige : 90° vers le centre (courbe)
+				const dirToCenter = bundleX > startX ? 1 : -1;
+				let res = quarterDownToHorizontalSegment(startX, startY, dirToCenter, radius);
+				d += ` ${res.seg}`;
+				let currX = res.ex;
+				let currY = res.ey;
+
+				// 2) ligne horizontale vers la "colonne" centrale correspondante
+				d += ` L ${bundleX} ${currY}`;
+				currX = bundleX;
+
+				// 3) descente verticale au centre, sous la légende (lignes parallèles espacées de 5px)
+				const verticalTargetY = Math.max(currY + 10, legendBottomLocal + 15);
+				d += ` L ${currX} ${verticalTargetY}`;
+				currY = verticalTargetY;
+
+				// 4) sous la légende : 90° vers le bloc correspondant (courbe)
+				const dirToBlock = blockCenterX > currX ? 1 : -1;
+				res = quarterDownToHorizontalSegment(currX, currY, dirToBlock, radius);
+				d += ` ${res.seg}`;
+				currX = res.ex;
+				currY = res.ey;
+
+				// 5) ligne horizontale vers le centre du bloc
+				d += ` L ${blockCenterX} ${currY}`;
+				currX = blockCenterX;
+
+				// 6) dernière jonction : descente verticale jusqu’au bord supérieur du bloc
+				d += ` L ${currX} ${blockTopLocal}`;
 
 				const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-				const d = `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
 				path.setAttribute("d", d);
-
 				svg.appendChild(path);
 			});
 		}
@@ -987,8 +1053,7 @@ permalink: /prairie/
 
 			const track = document.getElementById("prairie-track");
 			if (track) {
-				track.addEventListener("mousemove", handleTrackHover);
-				track.addEventListener("mouseleave", updateProgress);
+				track.addEventListener("click", handleTrackClick);
 			}
 
 			// Recalcul des connecteurs au resize

@@ -16,8 +16,8 @@ permalink: /prairie/
 			<div class="prairie-line-completed" aria-hidden="true"></div>
 
 			<!-- Extrémités -->
-			<div class="prairie-endpoint prairie-endpoint--left" aria-label="Arrivée"></div>
-			<div class="prairie-endpoint prairie-endpoint--right" aria-label="Départ"></div>
+			<div class="prairie-endpoint prairie-endpoint--left" aria-label="Départ"></div>
+			<div class="prairie-endpoint prairie-endpoint--right" aria-label="Arrivée"></div>
 
 			<!-- Curseur -->
 			<div class="prairie-pointer" id="prairie-pointer" aria-label="Position actuelle sur le trajet"></div>
@@ -65,7 +65,7 @@ permalink: /prairie/
 	/* === Styles prairie === */
 
 	:root {
-		/* 0 = départ (cercle rouge à droite), 1 = arrivée (cercle bleu à gauche) */
+		/* 0 = départ (cercle rouge à gauche), 1 = arrivée (cercle bleu à droite) */
 		--prairie-progress: 0;
 	}
 
@@ -124,6 +124,8 @@ permalink: /prairie/
 
 	/* La piste s'étend sur toute la largeur, la trajectoire elle-même fait 80% */
 
+
+
 	.prairie-track {
 		position: relative;
 		width: 100%;
@@ -170,7 +172,7 @@ permalink: /prairie/
 		content: "";
 		position: absolute;
 		top: 50%;
-		right: 0;
+		left: 0;
 		transform: translateY(-50%);
 		height: 4px;
 		width: calc(var(--prairie-progress) * 100%);
@@ -193,39 +195,39 @@ permalink: /prairie/
 		/* au-dessus de la barre de progression */
 	}
 
+	/* Rouge / départ à gauche */
 	.prairie-endpoint--left {
 		left: 10%;
 		width: 1.5vw;
 		height: 1.5vw;
 		min-width: 20px;
 		min-height: 20px;
-		background: #2f8bff;
-		/* bleu lumineux */
+		background: #ff7b45;
 		box-shadow:
-			0 0 10px rgba(80, 170, 255, 0.9),
-			0 0 22px rgba(80, 170, 255, 0.6);
+			0 0 10px rgba(255, 136, 76, 0.9),
+			0 0 22px rgba(255, 136, 76, 0.6);
 	}
 
+	/* Bleu / arrivée à droite */
 	.prairie-endpoint--right {
 		left: 90%;
 		width: 1vw;
 		height: 1vw;
 		min-width: 16px;
 		min-height: 16px;
-		background: #ff7b45;
-		/* rouge/orangé lumineux */
+		background: #2f8bff;
 		box-shadow:
-			0 0 10px rgba(255, 136, 76, 0.9),
-			0 0 22px rgba(255, 136, 76, 0.6);
+			0 0 10px rgba(80, 170, 255, 0.9),
+			0 0 22px rgba(80, 170, 255, 0.6);
 	}
 
-	/* Curseur simplifié (couleur unie), pulsations plus larges et un peu plus rapides/opaques */
+	/* Curseur simplifié (couleur unie), pulsations plus larges et rapides/opaques */
 
 	.prairie-pointer {
 		position: absolute;
 		top: 50%;
-		/* progression de droite (rouge) vers gauche (bleu) */
-		left: calc(10% + (1 - var(--prairie-progress)) * 80%);
+		/* progression de gauche (rouge) vers droite (bleu) */
+		left: calc(10% + var(--prairie-progress) * 80%);
 		width: 1.1vw;
 		height: 1.1vw;
 		min-width: 18px;
@@ -295,8 +297,8 @@ permalink: /prairie/
 		--prairie-position: 0;
 		position: absolute;
 		top: 50%;
-		/* même interpolation droite → gauche */
-		left: calc(10% + (1 - var(--prairie-position)) * 80%);
+		/* progression gauche → droite */
+		left: calc(10% + var(--prairie-position) * 80%);
 		transform: translate(-50%, -50%);
 		width: 0.35vw;
 		height: 0.35vw;
@@ -382,7 +384,6 @@ permalink: /prairie/
 		border-bottom: 1px solid #d1c3a7;
 		padding-bottom: 0.75rem;
 		margin-bottom: 1.5rem;
-		/* position: static (par défaut) pour que la croix se réfère au journal */
 	}
 
 	/* Bouton de fermeture (croix) – légèrement agrandi, collé en haut à droite du journal */
@@ -481,6 +482,8 @@ permalink: /prairie/
 
 	.prairie-journal-secondary::after {
 		/* effet "il faut tourner la page" */
+
+
 		content: "…";
 		position: absolute;
 		right: 0;
@@ -540,8 +543,6 @@ permalink: /prairie/
 		}
 
 		.prairie-legend {
-
-
 			flex-direction: column;
 			align-items: flex-start;
 		}
@@ -559,7 +560,7 @@ permalink: /prairie/
 		}
 
 		const startDate = utcDate(2025, 9, 1);  // 1er septembre 2025
-		const endDate = utcDate(2026, 6, 1);  // 1er juin 2026
+		const endDate = utcDate(2026, 6, 1);    // 1er juin 2026
 
 		// Distance totale représentée par les pointillés
 		const totalDistanceKm = 363.83e6;
@@ -588,14 +589,14 @@ permalink: /prairie/
 			if (elapsed < 0) elapsed = 0;
 			if (elapsed > total) elapsed = total;
 
-			return elapsed / total; // 0 → départ (rouge), 1 → arrivée (bleu)
+			return elapsed / total; // 0 → départ (rouge, gauche), 1 → arrivée (bleu, droite)
 		}
 
 		function updateProgress() {
 			const now = USE_MANUAL_DATE ? MANUAL_DATE : new Date();
 			const progress = progressFor(now);
 
-			// Mise à jour de la variable CSS pour la position du curseur
+			// Mise à jour de la variable CSS pour la position du curseur et de la barre
 			document.documentElement.style.setProperty(
 				"--prairie-progress",
 				progress.toString()
@@ -666,8 +667,6 @@ permalink: /prairie/
 			},
 			{
 				id: "ms-2026-02-11",
-
-
 				date: utcDate(2026, 2, 11),
 				label: "11 février 2026",
 				title: "Édition de mi-parcours",
@@ -699,7 +698,7 @@ permalink: /prairie/
 				button.setAttribute("aria-label", ms.label);
 				button.title = ms.label;
 
-				// Position le jalon selon la date correspondante
+				// Position le jalon selon la date correspondante (0 → gauche, 1 → droite)
 				const frac = progressFor(ms.date);
 				button.style.setProperty("--prairie-position", frac.toString());
 
@@ -767,9 +766,8 @@ permalink: /prairie/
 				closeBtn.addEventListener("click", closeJournal);
 			}
 
-			// Si tu veux que la progression se mette à jour automatiquement
-			// tant que la page reste ouverte, tu peux décommenter :
-			setInterval(updateProgress, 60 * 60 * 1000); // toutes les heures
+			// Mise à jour de la progression toutes les heures
+			setInterval(updateProgress, 60 * 60 * 1000);
 		});
 	})();
 </script>

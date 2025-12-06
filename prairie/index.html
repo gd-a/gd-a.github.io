@@ -22,7 +22,7 @@ permalink: /prairie/
 			<!-- Curseur -->
 			<div class="prairie-pointer" id="prairie-pointer" aria-label="Position actuelle sur le trajet"></div>
 
-			<!-- Tooltip précision km (uniquement sur la piste) -->
+			<!-- Tooltip précision km (uniquement sur la piste, via clic) -->
 			<div class="prairie-track-tooltip" id="prairie-track-tooltip" aria-hidden="true"></div>
 
 			<!-- Jalons injectés via JavaScript -->
@@ -133,6 +133,8 @@ permalink: /prairie/
 		height: 12vh;
 		min-height: 90px;
 		z-index: 3;
+		cursor: pointer;
+		/* seul le tracker déclenche la précision km */
 	}
 
 	/* Ligne pointillée futuriste – affinée pour matcher la barre, pattern 8px x 4px */
@@ -155,6 +157,8 @@ permalink: /prairie/
 		border-radius: 999px;
 		filter: drop-shadow(0 0 6px rgba(200, 200, 200, 0.35));
 		z-index: 0;
+		pointer-events: none;
+		/* la ligne n'est pas "cliquable", seul le track l'est */
 	}
 
 	/* Segment complété en trait plein, posé au-dessus de la ligne pointillée */
@@ -195,6 +199,7 @@ permalink: /prairie/
 		border-radius: 50%;
 		z-index: 2;
 		/* au-dessus de la barre de progression */
+		pointer-events: none;
 	}
 
 	/* Bleu / arrivée à gauche */
@@ -240,6 +245,7 @@ permalink: /prairie/
 		transform: translate(-50%, -50%);
 		z-index: 3;
 		overflow: visible;
+		pointer-events: none;
 	}
 
 	.prairie-pointer::before,
@@ -331,7 +337,8 @@ permalink: /prairie/
 		min-width: 12px;
 		min-height: 12px;
 		border-radius: 50%;
-		border: 2px solid #f9ebcf;
+		border: none;
+		/* pas de bordure, juste la couleur */
 		background: #939393;
 		cursor: default;
 		z-index: 4;
@@ -340,7 +347,7 @@ permalink: /prairie/
 		pointer-events: none;
 	}
 
-	/* "Tige" verticale sous le jalon, vers les connecteurs */
+	/* "Tige" verticale sous le jalon, vers les connecteurs (25px) */
 
 	.prairie-milestone::after {
 		content: "";
@@ -348,7 +355,7 @@ permalink: /prairie/
 		top: 100%;
 		left: 50%;
 		width: 1px;
-		height: 40px;
+		height: 25px;
 		margin-top: 4px;
 		transform: translateX(-50%);
 		background: #6d6d6d;
@@ -369,6 +376,8 @@ permalink: /prairie/
 		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 		font-size: 0.85rem;
 		color: #b0b0b0;
+
+
 		z-index: 3;
 		position: relative;
 	}
@@ -599,8 +608,6 @@ permalink: /prairie/
 
 	.prairie-journal-editorial-title {
 		margin: 0 0 0.6rem;
-
-
 		font-size: 0.9rem;
 		letter-spacing: 0.18em;
 		text-transform: uppercase;
@@ -705,6 +712,8 @@ permalink: /prairie/
 			const progress = progressFor(now);
 
 			// Mise à jour de la variable CSS pour la position du curseur
+
+
 			document.documentElement.style.setProperty(
 				"--prairie-progress",
 				progress.toString()
@@ -719,9 +728,9 @@ permalink: /prairie/
 
 			const traveledKm = totalDistanceKm * progress;
 			const traveledMillions = traveledKm / 1e6;
-
-
 			const totalMillions = totalDistanceKm / 1e6;
+
+
 
 			distanceLabel.textContent =
 				numberFormatterMillions.format(traveledMillions) +
@@ -742,8 +751,6 @@ permalink: /prairie/
 			// Position relative sur la largeur de la piste (0 = gauche, 1 = droite)
 			let rel = (ev.clientX - rect.left) / rect.width;
 			const min = 0.1;
-
-
 			const max = 0.9;
 			if (rel < min) rel = min;
 			if (rel > max) rel = max;
@@ -862,6 +869,8 @@ permalink: /prairie/
 		}
 
 		function createBlocks() {
+
+
 			const container = document.getElementById("prairie-milestone-blocks");
 			if (!container) return;
 
@@ -961,23 +970,14 @@ permalink: /prairie/
 			const count = sortedMilestones.length;
 			if (count === 0) return;
 			const centerIndex = (count - 1) / 2;
-			const bundleSpacing = 5;
-			const radiusBase = 24;
-			const radiusStep = 5;
-			const BAR_EXTRA = 44; // 4 (margin-top) + 40 (height) de la tige
-			const legendBottomLocal = legendRect.bottom - rect.top;
-			const k = 0.55; // facteur de courbure pour les 90°
+			const BUNDLE_SPACING = 5;      // espacement horizontal entre les lignes centrales
+			const CURVE_RADIUS = 12;       // rayon des quarts de cercle (toutes les courbes)
+			const K = 0.55;                // facteur de courbure pour les cubiques
+			const BAR_MARGIN = 4;
+			const BAR_HEIGHT = 25;
+			const BAR_EXTRA = BAR_MARGIN + BAR_HEIGHT;
 
-			function quarterDownToHorizontalSegment(sx, sy, dir, R) {
-				const ex = sx + dir * R;
-				const ey = sy + R;
-				const c1x = sx;
-				const c1y = sy + k * R;
-				const c2x = ex;
-				const c2y = ey - k * R;
-				const seg = `C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`;
-				return { seg, ex, ey };
-			}
+			const legendBottomLocal = legendRect.bottom - rect.top;
 
 			sortedMilestones.forEach((ms, index) => {
 				const milestoneEl = document.querySelector(
@@ -992,46 +992,77 @@ permalink: /prairie/
 				const mRect = milestoneEl.getBoundingClientRect();
 				const bRect = blockEl.getBoundingClientRect();
 
+				// Point de départ : bas de la tige verticale du jalon
 				const startX = mRect.left + mRect.width / 2 - rect.left;
 				const startY = mRect.bottom - rect.top + BAR_EXTRA;
 
-				const bundleX = centerX + (index - centerIndex) * bundleSpacing;
-				const radius = radiusBase + radiusStep * index;
+				// Axe vertical central pour cette ligne (avec espacement de 5px)
+				const bundleX = centerX + (index - centerIndex) * BUNDLE_SPACING;
 
+				// Centre du bloc et bord supérieur du bloc
 				const blockCenterX = bRect.left + bRect.width / 2 - rect.left;
 				const blockTopLocal = bRect.top - rect.top;
 
 				let d = `M ${startX} ${startY}`;
 
-				// 1) à partir du bas de la tige : 90° vers le centre (courbe)
+				// 1) 90° depuis la tige (verticale) vers le centre (horizontale)
 				const dirToCenter = bundleX > startX ? 1 : -1;
-				let res = quarterDownToHorizontalSegment(startX, startY, dirToCenter, radius);
-				d += ` ${res.seg}`;
-				let currX = res.ex;
-				let currY = res.ey;
+				const arc1EndX = startX + dirToCenter * CURVE_RADIUS;
+				const arc1EndY = startY + CURVE_RADIUS;
+				const arc1c1x = startX;
+				const arc1c1y = startY + K * CURVE_RADIUS;
+				const arc1c2x = arc1EndX;
+				const arc1c2y = arc1EndY - K * CURVE_RADIUS;
+				d += ` C ${arc1c1x} ${arc1c1y}, ${arc1c2x} ${arc1c2y}, ${arc1EndX} ${arc1EndY}`;
 
-				// 2) ligne horizontale vers la "colonne" centrale correspondante
+				let currX = arc1EndX;
+				let currY = arc1EndY;
+
+				// 2) extension horizontale vers l'axe central
 				d += ` L ${bundleX} ${currY}`;
 				currX = bundleX;
 
-				// 3) descente verticale au centre, sous la légende (lignes parallèles espacées de 5px)
+				// 3) 90° vers le bas (centre) depuis l'horizontale
+				const dirHoriz1 = bundleX > arc1EndX ? 1 : -1;
+				const arc2EndX = bundleX;
+				const arc2EndY = currY + CURVE_RADIUS;
+				const arc2c1x = currX + dirHoriz1 * K * CURVE_RADIUS;
+				const arc2c1y = currY;
+				const arc2c2x = arc2EndX;
+				const arc2c2y = arc2EndY - K * CURVE_RADIUS;
+				d += ` C ${arc2c1x} ${arc2c1y}, ${arc2c2x} ${arc2c2y}, ${arc2EndX} ${arc2EndY}`;
+				currX = arc2EndX;
+				currY = arc2EndY;
+
+				// 4) extension verticale sous la légende
 				const verticalTargetY = Math.max(currY + 10, legendBottomLocal + 15);
 				d += ` L ${currX} ${verticalTargetY}`;
 				currY = verticalTargetY;
 
-				// 4) sous la légende : 90° vers le bloc correspondant (courbe)
+				// 5) deuxième 90° vers le bloc (horizontale) après la légende
 				const dirToBlock = blockCenterX > currX ? 1 : -1;
-				res = quarterDownToHorizontalSegment(currX, currY, dirToBlock, radius);
-				d += ` ${res.seg}`;
-				currX = res.ex;
-				currY = res.ey;
+				const arc3EndX = currX + dirToBlock * CURVE_RADIUS;
+				const arc3EndY = currY + CURVE_RADIUS;
+				const arc3c1x = currX;
+				const arc3c1y = currY + K * CURVE_RADIUS;
+				const arc3c2x = arc3EndX;
+				const arc3c2y = arc3EndY - K * CURVE_RADIUS;
+				d += ` C ${arc3c1x} ${arc3c1y}, ${arc3c2x} ${arc3c2y}, ${arc3EndX} ${arc3EndY}`;
+				currX = arc3EndX;
+				currY = arc3EndY;
 
-				// 5) ligne horizontale vers le centre du bloc
+				// 6) extension horizontale vers l'alignement du bloc
 				d += ` L ${blockCenterX} ${currY}`;
 				currX = blockCenterX;
 
-				// 6) dernière jonction : descente verticale jusqu’au bord supérieur du bloc
-				d += ` L ${currX} ${blockTopLocal}`;
+				// 7) dernière 90° descendant sur le bord supérieur du bloc
+				const arc4EndX = currX;
+				const arc4EndY = blockTopLocal;
+				const arc4c1x = currX + dirToBlock * K * CURVE_RADIUS;
+				const arc4c1y = currY;
+				const arc4c2x = arc4EndX;
+				const arc4c2y = arc4EndY - K * CURVE_RADIUS;
+				d += ` C ${arc4c1x} ${arc4c1y}, ${arc4c2x} ${arc4c2y}, ${arc4EndX} ${arc4EndY}`;
 
 				const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 				path.setAttribute("d", d);
@@ -1061,8 +1092,8 @@ permalink: /prairie/
 				drawConnectors();
 			});
 
-			// Mise à jour de la progression toutes les heures
-			setInterval(updateProgress, 60 * 60 * 1000);
+			// Mise à jour de la progression toutes les 10 secondes
+			setInterval(updateProgress, 10 * 1000);
 		});
 	})();
 </script>

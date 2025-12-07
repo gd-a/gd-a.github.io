@@ -880,6 +880,7 @@ permalink: /prairie/
 		}
 
 		// Connecteurs : quarter-circles (A) + segments droits
+		// Connecteurs : quarter-circles (A) + segments droits
 		function drawConnectors() {
 			const svg = document.getElementById("prairie-connectors");
 			const progressEl = document.querySelector(".prairie-progress");
@@ -919,29 +920,16 @@ permalink: /prairie/
 				const orderIndex =
 					orderIndexById[ms.id] !== undefined ? orderIndexById[ms.id] : idx;
 
-				// Décalage vertical supplémentaire : maintenant VERS LE HAUT (on soustrait)
+				// Décalage vertical supplémentaire (vers le haut)
 				let extraStart = 0;
 				if (orderIndex === 1) extraStart = 5;   // milieu
 				if (orderIndex === 2) extraStart = 10;  // gauche
 
 				const stemBottomY = mRect.bottom - rect.top;
-				let P0x = mRect.left + mRect.width / 2 - rect.left;
+				const P0x = mRect.left + mRect.width / 2 - rect.left;
 				const baseP0y =
 					stemBottomY + 4 + 25 + orderIndex * VERTICAL_SHIFT;
-				// aller vers le HAUT
 				let P0y = baseP0y - extraStart;
-
-				// Fine alignment:
-				// - Link 1 (orderIndex 0, far right) and Link 2 (orderIndex 1, middle)
-				//   are visually 1px too far to the right → nudge left.
-				if (orderIndex === 0 || orderIndex === 1) {
-					P0x -= 1;
-				}
-
-				// Link 1: start a bit lower = add a 5px extension under the vertical bar
-				if (orderIndex === 0) {
-					P0y += 5;
-				}
 
 				// Colonne centrale pour ce connecteur
 				let baseColumnX =
@@ -976,7 +964,6 @@ permalink: /prairie/
 				const blockTopLocal = bRect.top - rect.top;
 
 				// Cas spécial : lien du milieu (orderIndex === 1)
-				// → la barre verticale va directement jusqu’au bord supérieur du bloc
 				if (orderIndex === 1) {
 					const P4x = columnX;
 					const P4y = blockTopLocal; // directement jusqu’au bloc
@@ -987,6 +974,7 @@ permalink: /prairie/
 					const baseSweep2 = dirHoriz > 0 ? 1 : 0;
 					const sweep2 = baseSweep2;     // le second quart reste comme avant
 
+					// On garde la terminaison adoucie (Q), ça t’évite l’angle droit au milieu
 					const dMid =
 						`M ${P0x} ${P0y} ` +
 						// 1er quart de cercle
@@ -995,9 +983,8 @@ permalink: /prairie/
 						`L ${P2x} ${P2y} ` +
 						// 2e quart de cercle vers la verticale
 						`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep2} ${P3x} ${P3y} ` +
-						// courbe douce jusqu’au bloc (adoucit l’angle droit)
+						// courbe douce jusqu’au bloc
 						`Q ${P4x} ${P3y} ${P4x} ${P4y}`;
-
 
 					const pathMid = document.createElementNS("http://www.w3.org/2000/svg", "path");
 					pathMid.setAttribute("d", dMid);
@@ -1005,7 +992,8 @@ permalink: /prairie/
 					return;
 				}
 
-				// Autres cas : gauche (orderIndex = 2) et droite (orderIndex = 0)
+				// ==== Autres cas : gauche (orderIndex = 2) et droite (orderIndex = 0) ====
+
 				// Descente verticale au-delà de la légende (rail central)
 				const P4Base = Math.max(
 					P3y + CURVE_RADIUS,
@@ -1023,11 +1011,11 @@ permalink: /prairie/
 				const P5x = P4x + dirToBlock * CURVE_RADIUS;
 				const P5y = P4y + CURVE_RADIUS;
 
-				// Barre horizontale vers l’alignement du bloc
-				const P6x = blockCenterX;
+				// On prépare la dernière section : un petit segment horizontal
+				// puis un 4e quart de cercle pour entrer dans le bloc.
+				const P6x = blockCenterX - dirToBlock * CURVE_RADIUS;
 				const P6y = P5y;
 
-				// Descente verticale finale sur le bord supérieur du bloc
 				const P7x = blockCenterX;
 				const P7y = blockTopLocal;
 
@@ -1039,10 +1027,25 @@ permalink: /prairie/
 				const sweep2 = baseSweep2;     // milieu OK
 
 				const baseSweep3 = dirToBlock > 0 ? 1 : 0;
-				const sweep3 = 1 - baseSweep3; // bas inversé
+				const sweep3 = 1 - baseSweep3; // 3e quart
+
+				// 4e quart : même sens que le 3e pour garder une courbe continue
+				const sweep4 = sweep3;
+
+				// Début de chemin : pour le lien 1 (orderIndex 0),
+				// on ajoute une petite barre verticale de 5px juste sous la barre du jalon.
+				let startSegment;
+				if (orderIndex === 0) {
+					const preY = P0y - 5;
+					startSegment =
+						`M ${P0x} ${preY} ` +
+						`L ${P0x} ${P0y} `;
+				} else {
+					startSegment = `M ${P0x} ${P0y} `;
+				}
 
 				const d =
-					`M ${P0x} ${P0y} ` +
+					startSegment +
 					// 1er quart de cercle (vers le centre)
 					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep1} ${P1x} ${P1y} ` +
 					// barre horizontale vers la colonne centrale
@@ -1051,19 +1054,19 @@ permalink: /prairie/
 					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep2} ${P3x} ${P3y} ` +
 					// descente verticale sous la légende
 					`L ${P4x} ${P4y} ` +
-					// 3e quart de cercle vers le bloc
+					// 3e quart de cercle vers le bloc (approche horizontale)
 					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep3} ${P5x} ${P5y} ` +
-					// barre horizontale vers le centre du bloc
+					// petit segment horizontal avant d’entrer dans le bloc
 					`L ${P6x} ${P6y} ` +
-					// courbe douce pour finir sur le bloc
-					`Q ${P7x} ${P6y} ${P7x} ${P7y}`;
-
+					// 4e quart de cercle : entrée douce dans le bloc
+					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep4} ${P7x} ${P7y}`;
 
 				const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 				path.setAttribute("d", d);
 				svg.appendChild(path);
 			});
 		}
+
 
 		document.addEventListener("DOMContentLoaded", function () {
 			createMilestones();

@@ -925,11 +925,23 @@ permalink: /prairie/
 				if (orderIndex === 2) extraStart = 10;  // gauche
 
 				const stemBottomY = mRect.bottom - rect.top;
-				const P0x = mRect.left + mRect.width / 2 - rect.left;
+				let P0x = mRect.left + mRect.width / 2 - rect.left;
 				const baseP0y =
 					stemBottomY + 4 + 25 + orderIndex * VERTICAL_SHIFT;
 				// aller vers le HAUT
 				let P0y = baseP0y - extraStart;
+
+				// Fine alignment:
+				// - Link 1 (orderIndex 0, far right) and Link 2 (orderIndex 1, middle)
+				//   are visually 1px too far to the right → nudge left.
+				if (orderIndex === 0 || orderIndex === 1) {
+					P0x -= 1;
+				}
+
+				// Link 1: start a bit lower = add a 5px extension under the vertical bar
+				if (orderIndex === 0) {
+					P0y += 5;
+				}
 
 				// Colonne centrale pour ce connecteur
 				let baseColumnX =
@@ -983,8 +995,9 @@ permalink: /prairie/
 						`L ${P2x} ${P2y} ` +
 						// 2e quart de cercle vers la verticale
 						`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep2} ${P3x} ${P3y} ` +
-						// barre verticale directement jusqu’au bloc
-						`L ${P4x} ${P4y}`;
+						// courbe douce jusqu’au bloc (adoucit l’angle droit)
+						`Q ${P4x} ${P3y} ${P4x} ${P4y}`;
+
 
 					const pathMid = document.createElementNS("http://www.w3.org/2000/svg", "path");
 					pathMid.setAttribute("d", dMid);
@@ -1042,8 +1055,9 @@ permalink: /prairie/
 					`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep3} ${P5x} ${P5y} ` +
 					// barre horizontale vers le centre du bloc
 					`L ${P6x} ${P6y} ` +
-					// descente verticale finale
-					`L ${P7x} ${P7y}`;
+					// courbe douce pour finir sur le bloc
+					`Q ${P7x} ${P6y} ${P7x} ${P7y}`;
+
 
 				const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 				path.setAttribute("d", d);

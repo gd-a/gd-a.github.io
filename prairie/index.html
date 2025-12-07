@@ -378,8 +378,6 @@ permalink: /prairie/
 		filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.6));
 	}
 
-
-
 	.prairie-milestone-blocks-wrapper {
 		position: relative;
 		margin: 2.4rem 10% 0;
@@ -631,6 +629,7 @@ permalink: /prairie/
 		}
 	}
 </style>
+
 <script>
 	// === Logique Prairie  ===
 
@@ -793,7 +792,8 @@ permalink: /prairie/
 				const frac = progressFor(ms.date);
 				button.style.setProperty("--prairie-position", frac.toString());
 
-				const orderIndex = orderIndexById[ms.id] ?? 0;
+				const orderIndex =
+					orderIndexById[ms.id] !== undefined ? orderIndexById[ms.id] : 0;
 				button.dataset.milestoneId = ms.id;
 				button.dataset.orderIndex = String(orderIndex);
 
@@ -834,8 +834,6 @@ permalink: /prairie/
 			const mainEl = document.getElementById("prairie-journal-main-article");
 			const secondaryEl = document.getElementById("prairie-journal-secondary");
 			const editorialEl = document.getElementById("prairie-journal-editorial-content");
-
-
 
 			if (!journal || !titleEl || !dateEl || !mainEl || !secondaryEl || !editorialEl) {
 				return;
@@ -905,12 +903,12 @@ permalink: /prairie/
 
 			const legendBottomLocal = legendRect.bottom - rect.top;
 
-			sortedMilestones.forEach((ms, idx) => {
+			sortedMilestones.forEach(function (ms, idx) {
 				const milestoneEl = document.querySelector(
-					`.prairie-milestone[data-milestone-id="${ms.id}"]`
+					'.prairie-milestone[data-milestone-id="' + ms.id + '"]'
 				);
 				const blockEl = document.querySelector(
-					`.prairie-milestone-block[data-milestone-id="${ms.id}"]`
+					'.prairie-milestone-block[data-milestone-id="' + ms.id + '"]'
 				);
 
 				if (!milestoneEl || !blockEl) return;
@@ -918,7 +916,8 @@ permalink: /prairie/
 				const mRect = milestoneEl.getBoundingClientRect();
 				const bRect = blockEl.getBoundingClientRect();
 
-				const orderIndex = orderIndexById[ms.id] ?? idx;
+				const orderIndex =
+					orderIndexById[ms.id] !== undefined ? orderIndexById[ms.id] : idx;
 
 				// Décalage vertical supplémentaire : maintenant VERS LE HAUT (on soustrait)
 				let extraStart = 0;
@@ -976,7 +975,7 @@ permalink: /prairie/
 					const baseSweep2 = dirHoriz > 0 ? 1 : 0;
 					const sweep2 = baseSweep2;     // le second quart reste comme avant
 
-					const d =
+					const dMid =
 						`M ${P0x} ${P0y} ` +
 						// 1er quart de cercle
 						`A ${CURVE_RADIUS} ${CURVE_RADIUS} 0 0 ${sweep1} ${P1x} ${P1y} ` +
@@ -988,7 +987,7 @@ permalink: /prairie/
 						`L ${P4x} ${P4y}`;
 
 					const pathMid = document.createElementNS("http://www.w3.org/2000/svg", "path");
-					pathMid.setAttribute("d", d);
+					pathMid.setAttribute("d", dMid);
 					svg.appendChild(pathMid);
 					return;
 				}
@@ -1001,7 +1000,7 @@ permalink: /prairie/
 				);
 				let P4y = P4Base;
 				if (orderIndex === 2) {
-					// Leftmost: vertical middle bar 5px shorter
+					// Leftmost: middle vertical bar 5px shorter
 					P4y = Math.max(P3y + CURVE_RADIUS, P4Base - 5);
 				}
 				const P4x = columnX;
@@ -1066,5 +1065,6 @@ permalink: /prairie/
 			window.addEventListener("resize", function () {
 				drawConnectors();
 			});
-		})();
+		});
+	})();
 </script>

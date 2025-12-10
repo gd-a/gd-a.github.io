@@ -419,6 +419,20 @@ permalink: /prairie/
 		color: #b0b0b0;
 	}
 
+	.prairie-riddle-figure {
+		margin: 0 auto;
+		max-width: 320px;
+		text-align: center;
+	}
+
+	.prairie-riddle-image {
+		display: block;
+		width: 100%;
+		height: auto;
+		border-radius: 14px;
+		box-shadow: 0 18px 36px rgba(0, 0, 0, 0.65);
+	}
+
 	.prairie-riddle--hidden {
 		display: none;
 	}
@@ -569,6 +583,7 @@ permalink: /prairie/
 		justify-content: center;
 		padding: 0;
 		box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+		z-index: 1;
 	}
 
 	.prairie-qr-close:hover,
@@ -1178,9 +1193,11 @@ permalink: /prairie/
 			title: "",
 			label: "",
 			main: `
-        <p class="prairie-earth-coords">
-          <span>«&nbsp;Êtes-vous perdu voyageur&nbsp;?&nbsp;»</span>
-        </p>
+        <div class="prairie-riddle">
+          <p class="prairie-earth-legend">
+            <span>Êtes-vous perdu voyageur?</span>
+          </p>
+        </div>
       `,
 			secondary: ""
 		};
@@ -1189,20 +1206,18 @@ permalink: /prairie/
 			title: "",
 			label: "",
 			main: `
-        <figure style="margin:0; text-align:center;">
-          <img src="article_d3_1a.jpg" alt="Bienvenue"
-            style="
-              display:block;
-              max-width: 720px;
-              width: 100%;
-              margin: 0 auto;
-              border-radius: 14px;
-              box-shadow: 0 18px 36px rgba(0,0,0,0.65);
-            ">
-        </figure>
+        <div class="prairie-riddle">
+          <figure class="prairie-riddle-figure">
+            <img
+              src="article_d3_1a.jpg"
+              alt="Bienvenue"
+              class="prairie-riddle-image">
+          </figure>
+        </div>
       `,
 			secondary: ""
 		};
+
 
 		const secretEntries = {
 			"4815162342": secretDefault,
@@ -1433,7 +1448,7 @@ permalink: /prairie/
 			if (!secret) return;
 
 			clearActiveStates();
-			openJournalWith(secret, { noHeader: true });
+			openJournalWith(secret, { noHeader: true, qr: true });
 		}
 
 		// --- Gestion des clics (désactivation/activation) ---

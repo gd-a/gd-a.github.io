@@ -15,9 +15,12 @@ permalink: /prairie/
 			<!-- Portion déjà parcourue en trait plein -->
 			<div class="prairie-line-completed" aria-hidden="true"></div>
 
-			<!-- Extrémités -->
-			<div class="prairie-endpoint prairie-endpoint--left" aria-label="Arrivée"></div>
-			<div class="prairie-endpoint prairie-endpoint--right" aria-label="Départ"></div>
+			<!-- Extrémités (cliquables) -->
+			<div class="prairie-endpoint prairie-endpoint--left" data-entry-id="endpoint-left" role="button"
+				tabindex="0" aria-label="Arrivée"></div>
+
+			<div class="prairie-endpoint prairie-endpoint--right" data-entry-id="endpoint-right" role="button"
+				tabindex="0" aria-label="Départ – Mars"></div>
 
 			<!-- Curseur -->
 			<div class="prairie-pointer" id="prairie-pointer" aria-label="Position actuelle sur le trajet"></div>
@@ -30,10 +33,38 @@ permalink: /prairie/
 			<span id="prairie-distance-label"></span>
 		</div>
 	</section>
+
+	<!-- Journal simple (fond sombre, mise en page + bouton de fermeture) -->
+	<section id="prairie-journal" class="prairie-journal prairie-journal--hidden" aria-live="polite">
+		<header class="prairie-journal-header">
+			<div>
+				<h2 id="prairie-journal-title"></h2>
+				<p id="prairie-journal-date" class="prairie-journal-date"></p>
+			</div>
+			<button type="button" id="prairie-journal-close" class="prairie-journal-close"
+				aria-label="Fermer le journal">
+				×
+			</button>
+		</header>
+
+		<div class="prairie-journal-layout">
+			<!-- Colonne principale -->
+			<div class="prairie-journal-main">
+				<div id="prairie-journal-main-article" class="prairie-journal-main-article"></div>
+				<div id="prairie-journal-secondary" class="prairie-journal-secondary"></div>
+			</div>
+
+			<!-- Colonne édito -->
+			<aside class="prairie-journal-editorial">
+				<h3 class="prairie-journal-editorial-title">Note</h3>
+				<div id="prairie-journal-editorial-content"></div>
+			</aside>
+		</div>
+	</section>
 </div>
 
 <style>
-	/* === Styles prairie (version "barre seule") === */
+	/* === Styles prairie (barre + journal simple) === */
 
 	:root {
 		/* 0 = départ (cercle rouge à droite), 1 = arrivée (cercle bleu à gauche) */
@@ -94,7 +125,7 @@ permalink: /prairie/
 		z-index: 3;
 	}
 
-	/* Ligne pointillée futuriste – affinée pour matcher la barre, pattern 8px x 4px */
+	/* Ligne pointillée futuriste */
 
 	.prairie-line {
 		position: absolute;
@@ -117,7 +148,7 @@ permalink: /prairie/
 		pointer-events: none;
 	}
 
-	/* Segment complété en trait plein, posé au-dessus de la ligne pointillée */
+	/* Segment complété en trait plein */
 
 	.prairie-line-completed {
 		position: absolute;
@@ -145,7 +176,7 @@ permalink: /prairie/
 			0 0 10px rgba(220, 220, 220, 0.4);
 	}
 
-	/* Cercles d'extrémité */
+	/* Cercles d'extrémité (désormais cliquables) */
 
 	.prairie-endpoint {
 		position: absolute;
@@ -153,10 +184,11 @@ permalink: /prairie/
 		transform: translate(-50%, -50%);
 		border-radius: 50%;
 		z-index: 2;
-		pointer-events: none;
+		cursor: pointer;
+		pointer-events: auto;
+		outline: none;
 	}
 
-	/* Bleu / arrivée à gauche */
 	.prairie-endpoint--left {
 		left: 10%;
 		width: 1.5vw;
@@ -169,7 +201,6 @@ permalink: /prairie/
 			0 0 22px rgba(80, 170, 255, 0.6);
 	}
 
-	/* Rouge / départ à droite */
 	.prairie-endpoint--right {
 		left: 90%;
 		width: 1vw;
@@ -182,7 +213,14 @@ permalink: /prairie/
 			0 0 22px rgba(255, 136, 76, 0.6);
 	}
 
-	/* Curseur simplifié + pulsations */
+	.prairie-endpoint--active {
+		box-shadow:
+			0 0 0 3px rgba(255, 255, 255, 0.35),
+			0 0 18px rgba(255, 255, 255, 0.45);
+		transform: translate(-50%, -50%) scale(1.06);
+	}
+
+	/* Curseur + pulsations (bordure 1px comme tu l’as mis) */
 
 	.prairie-pointer {
 		position: absolute;
@@ -194,7 +232,7 @@ permalink: /prairie/
 		min-height: 18px;
 		border-radius: 50%;
 		background: #d8d8d8;
-		border: 2px solid #f0f0f0;
+		border: 1px solid #f0f0f0;
 		transform: translate(-50%, -50%);
 		z-index: 3;
 		overflow: visible;
@@ -252,7 +290,7 @@ permalink: /prairie/
 		}
 	}
 
-	/* Jalons (milestones) – décoratifs, non cliquables */
+	/* Jalons (désormais cliquables aussi) */
 
 	.prairie-milestone {
 		--prairie-position: 0;
@@ -265,12 +303,13 @@ permalink: /prairie/
 		min-width: 12px;
 		min-height: 12px;
 		border-radius: 50%;
+		border: none;
 		background: #939393;
-		cursor: default;
+		cursor: pointer;
 		z-index: 4;
 		padding: 0;
 		outline: none;
-		pointer-events: none;
+		pointer-events: auto;
 	}
 
 	.prairie-milestone::after {
@@ -283,6 +322,10 @@ permalink: /prairie/
 		margin-top: 4px;
 		transform: translateX(-50%);
 		background: #6d6d6d;
+	}
+
+	.prairie-milestone--active {
+		background: #f9ebcf;
 	}
 
 	/* Légende (date + distance) */
@@ -304,7 +347,225 @@ permalink: /prairie/
 		white-space: nowrap;
 	}
 
+	/* === Journal simple === */
+
+	.prairie-journal {
+		max-width: 960px;
+		margin: 4vh auto 8vh;
+		padding: 2rem 2rem 2.5rem;
+		background: #101010;
+		border-radius: 10px;
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.75);
+		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		color: #f2f2f2;
+		position: relative;
+	}
+
+	.prairie-journal--hidden {
+		display: none;
+	}
+
+	.prairie-journal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		padding-bottom: 0.75rem;
+		margin-bottom: 1.5rem;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		gap: 1rem;
+	}
+
+	.prairie-journal-header h2 {
+		margin: 0;
+		font-size: 1.4rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.prairie-journal-date {
+		margin: 0.25rem 0 0;
+		font-size: 0.8rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: #9a9a9a;
+	}
+
+	.prairie-journal-close {
+		position: absolute;
+		top: 0.7rem;
+		right: 0.7rem;
+		background: transparent;
+		border: none;
+		font-size: 1.4rem;
+		line-height: 1;
+		cursor: pointer;
+		color: #aaaaaa;
+		padding: 0.1rem 0.3rem;
+	}
+
+	.prairie-journal-close:hover,
+	.prairie-journal-close:focus-visible {
+		color: #ffffff;
+	}
+
+	.prairie-journal-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 2.5fr) minmax(0, 1fr);
+		column-gap: 2.25rem;
+		row-gap: 1.75rem;
+	}
+
+	.prairie-journal-main-article {
+		font-size: 0.96rem;
+		line-height: 1.7;
+		text-align: left;
+	}
+
+	.prairie-journal-main-article p {
+		margin: 0 0 0.9rem;
+	}
+
+	.prairie-journal-secondary {
+		margin-top: 1.4rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.08);
+		font-size: 0.9rem;
+		line-height: 1.6;
+		color: #d0d0d0;
+	}
+
+	.prairie-journal-secondary p {
+		margin: 0 0 0.7rem;
+	}
+
+	.prairie-journal-editorial {
+		border-left: 1px solid rgba(255, 255, 255, 0.08);
+		padding-left: 1.4rem;
+		font-size: 0.88rem;
+		line-height: 1.6;
+		color: #c8c8c8;
+	}
+
+	.prairie-journal-editorial-title {
+		margin: 0 0 0.6rem;
+		font-size: 0.9rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: #aaaaaa;
+	}
+
+	/* Coordonnées (dot bleu) */
+
+	.prairie-coord-quote {
+		font-size: 1.9rem;
+		text-align: center;
+		font-weight: 500;
+		margin: 0 0 0.75rem;
+	}
+
+	.prairie-coord-quote span {
+		opacity: 0.9;
+	}
+
+	.prairie-coord-legend {
+		text-align: center;
+		font-style: italic;
+		color: #c8c8c8;
+		margin: 0 0 1.6rem;
+	}
+
+	/* Fiche Mars (dot rouge) */
+
+	.prairie-mars-layout {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	.prairie-mars-figure {
+		margin: 0 auto 1.5rem;
+		max-width: 260px;
+		text-align: center;
+	}
+
+	.prairie-mars-figure img {
+		display: block;
+		width: 100%;
+		height: auto;
+		border-radius: 50%;
+		box-shadow: 0 0 18px rgba(0, 0, 0, 0.9);
+	}
+
+	.prairie-mars-figure figcaption {
+		margin-top: 0.5rem;
+		font-size: 0.8rem;
+		color: #bcbcbc;
+	}
+
+	.prairie-mars-columns {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1.6rem;
+	}
+
+	.prairie-mars-columns h3 {
+		margin: 0 0 0.75rem;
+		font-size: 0.9rem;
+		text-transform: uppercase;
+		letter-spacing: 0.16em;
+		color: #dcdcdc;
+	}
+
+	.prairie-deflist {
+		margin: 0;
+		padding: 0;
+	}
+
+	.prairie-deflist-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0.65rem;
+		padding: 0.18rem 0;
+		border-bottom: 1px dotted rgba(255, 255, 255, 0.06);
+	}
+
+	.prairie-deflist-row:last-child {
+		border-bottom: none;
+	}
+
+	.prairie-deflist dt {
+		font-weight: 500;
+		font-size: 0.8rem;
+		color: #bfbfbf;
+	}
+
+	.prairie-deflist dd {
+		margin: 0;
+		font-size: 0.8rem;
+		text-align: right;
+		color: #f3f3f3;
+		white-space: nowrap;
+	}
+
 	/* Adaptation responsive */
+
+	@media (max-width: 900px) {
+		.prairie-journal-layout {
+			grid-template-columns: 1fr;
+		}
+
+		.prairie-journal-editorial {
+			border-left: none;
+			border-top: 1px solid rgba(255, 255, 255, 0.08);
+			padding-left: 0;
+			padding-top: 1rem;
+		}
+
+		.prairie-mars-columns {
+			grid-template-columns: 1fr;
+		}
+	}
 
 	@media (max-width: 600px) {
 		.prairie-progress {
@@ -323,10 +584,9 @@ permalink: /prairie/
 </style>
 
 <script>
-	// === Logique Prairie – barre de progression seule ===
-
+	// === Logique Prairie – barre + jalons + journal simple ===
 	(function () {
-		// Dates clés du trajet (en UTC pour éviter les surprises de fuseaux)
+		// Dates clés du trajet (en UTC)
 		function utcDate(year, month, day) {
 			// month = 1–12
 			return new Date(Date.UTC(year, month - 1, day));
@@ -390,37 +650,444 @@ permalink: /prairie/
 				" millions de km";
 		}
 
-		// Jalons simples (dates) – uniquement décoratifs le long de la barre
-		const milestoneDates = [
-			{ date: utcDate(2025, 9, 26), label: "26 septembre 2025" },
-			{ date: utcDate(2025, 12, 1), label: "1 décembre 2025" },
-			{ date: utcDate(2026, 2, 11), label: "11 février 2026" }
+		// --- Contenu : endpoints spéciaux + jalons classiques ---
+
+		// Endpoints : dot bleu (arrivée) & dot rouge (Mars)
+		const endpointEntries = {
+			"endpoint-left": {
+				title: "Point d’arrivée",
+				label: "",
+				main: `
+          <div class="prairie-coord-quote">
+            <span>«&nbsp;48.74782451585052, 2.272479816718329&nbsp;»</span>
+          </div>
+          <p class="prairie-coord-legend"><em>Novitas est terra felicitatis</em></p>
+        `,
+				secondary: "",
+				editorial: ""
+			},
+			"endpoint-right": {
+				title: "Mars – fiche de mission",
+				label: "Planète tellurique",
+				main: `
+          <div class="prairie-mars-layout">
+            <figure class="prairie-mars-figure">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/OSIRIS_Mars_true_color.jpg/960px-OSIRIS_Mars_true_color.jpg"
+                alt="Image en vraies couleurs de la planète Mars">
+              <figcaption>
+                Image de Mars en vraies couleurs (ESA / Rosetta / OSIRIS).
+              </figcaption>
+            </figure>
+
+            <div class="prairie-mars-columns">
+              <div>
+                <h3>Caractéristiques orbitales</h3>
+                <dl class="prairie-deflist">
+                  <div class="prairie-deflist-row">
+                    <dt>Demi-grand axe</dt>
+                    <dd>227&nbsp;944&nbsp;000&nbsp;km (1,52371&nbsp;UA)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Aphélie</dt>
+                    <dd>249&nbsp;230&nbsp;000&nbsp;km (1,66602&nbsp;UA)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Périhélie</dt>
+                    <dd>206&nbsp;655&nbsp;000&nbsp;km (1,3814&nbsp;UA)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Circonférence orbitale</dt>
+                    <dd>1&nbsp;429&nbsp;083&nbsp;000&nbsp;km (9,55283&nbsp;UA)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Excentricité</dt>
+                    <dd>0,09339</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Période de révolution</dt>
+                    <dd>686,885&nbsp;j (≈&nbsp;1,88&nbsp;an)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Période synodique</dt>
+                    <dd>779,804&nbsp;j</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Vitesse orbitale moyenne</dt>
+                    <dd>24,080&nbsp;km/s</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Vitesse au périhélie</dt>
+                    <dd>26,503&nbsp;km/s</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Vitesse à l’aphélie</dt>
+                    <dd>21,975&nbsp;km/s</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Inclinaison sur l’écliptique</dt>
+                    <dd>1,85°</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Nœud ascendant</dt>
+                    <dd>49,6°</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Argument du périhélie</dt>
+                    <dd>286,5°</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Satellites connus</dt>
+                    <dd>2 (Phobos, Déimos)</dd>
+                  </div>
+                </dl>
+
+                <h3>Caractéristiques physiques</h3>
+                <dl class="prairie-deflist">
+                  <div class="prairie-deflist-row">
+                    <dt>Rayon équatorial</dt>
+                    <dd>3&nbsp;396,2&nbsp;km (0,533&nbsp;Terre)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Rayon polaire</dt>
+                    <dd>3&nbsp;376,2&nbsp;km (0,531&nbsp;Terre)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Rayon moyen</dt>
+                    <dd>3&nbsp;389,5&nbsp;km (0,532&nbsp;Terre)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Aplatissement</dt>
+                    <dd>0,00589</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Périmètre équatorial</dt>
+                    <dd>21&nbsp;344&nbsp;km</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Superficie</dt>
+                    <dd>144&nbsp;798&nbsp;500&nbsp;km² (0,284&nbsp;Terre)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Volume</dt>
+                    <dd>1,6318&nbsp;×&nbsp;10<sup>11</sup>&nbsp;km³</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Masse</dt>
+                    <dd>6,4185&nbsp;×&nbsp;10<sup>23</sup>&nbsp;kg (0,107&nbsp;Terre)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Masse volumique</dt>
+                    <dd>3&nbsp;933,5&nbsp;kg/m³</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Gravité de surface</dt>
+                    <dd>3,711&nbsp;m/s² (0,379&nbsp;g)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Vitesse de libération</dt>
+                    <dd>5,027&nbsp;km/s</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Jour sidéral</dt>
+                    <dd>1,025957&nbsp;j (24,622962&nbsp;h)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Rotation à l’équateur</dt>
+                    <dd>868,220&nbsp;km/h</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Inclinaison de l’axe</dt>
+                    <dd>25,19°</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Albédos (visuel / Bond)</dt>
+                    <dd>0,15 / 0,25</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Irradiance solaire</dt>
+                    <dd>589,2&nbsp;W/m² (0,431&nbsp;Terre)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>T° équilibre (corps noir)</dt>
+                    <dd>210,1&nbsp;K (–62,9&nbsp;°C)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>T° de surface (max / moy / min)</dt>
+                    <dd>293&nbsp;K / 210&nbsp;K / 130&nbsp;K</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div>
+                <h3>Atmosphère martienne</h3>
+                <dl class="prairie-deflist">
+                  <div class="prairie-deflist-row">
+                    <dt>Pression au sol</dt>
+                    <dd>≈&nbsp;610&nbsp;Pa (30–1&nbsp;155)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Densité au sol</dt>
+                    <dd>0,020&nbsp;kg/m³</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Masse totale</dt>
+                    <dd>2,5&nbsp;×&nbsp;10<sup>16</sup>&nbsp;kg</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Hauteur d’échelle</dt>
+                    <dd>11,1&nbsp;km</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Masse molaire moyenne</dt>
+                    <dd>43,34&nbsp;g/mol</dd>
+                  </div>
+                </dl>
+
+                <h3>Composition principale</h3>
+                <dl class="prairie-deflist">
+                  <div class="prairie-deflist-row">
+                    <dt>CO₂</dt>
+                    <dd>96,0&nbsp;%</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Argon (Ar)</dt>
+                    <dd>1,93&nbsp;%</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Diazote (N₂)</dt>
+                    <dd>1,89&nbsp;%</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>O₂</dt>
+                    <dd>0,145&nbsp;%</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>CO</dt>
+                    <dd>0,07&nbsp;%</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>H₂O (vapeur)</dt>
+                    <dd>0,03&nbsp;%</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>NO</dt>
+                    <dd>130&nbsp;ppm</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>H₂</dt>
+                    <dd>15&nbsp;ppm</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Ne</dt>
+                    <dd>2,5&nbsp;ppm</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>HDO</dt>
+                    <dd>850&nbsp;ppb</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Kr</dt>
+                    <dd>300&nbsp;ppb</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>CH₂O</dt>
+                    <dd>130&nbsp;ppb</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Xe</dt>
+                    <dd>80&nbsp;ppb</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>O₃</dt>
+                    <dd>30&nbsp;ppb</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>H₂O₂</dt>
+                    <dd>18&nbsp;ppb</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>CH₄</dt>
+                    <dd>10,5&nbsp;ppb</dd>
+                  </div>
+                </dl>
+
+                <h3>Références culturelles</h3>
+                <dl class="prairie-deflist">
+                  <div class="prairie-deflist-row">
+                    <dt>Divinité babylonienne</dt>
+                    <dd>Nergal</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Divinité grecque</dt>
+                    <dd>Ἄρης (Arès)</dd>
+                  </div>
+                  <div class="prairie-deflist-row">
+                    <dt>Nom chinois</dt>
+                    <dd>Huǒxīng (火星, «&nbsp;feu&nbsp;»)</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </div>
+        `,
+				secondary: "",
+				editorial: ""
+			}
+		};
+
+		// Jalons avec contenu placeholder (une phrase lorem ipsum pour l’instant)
+		const lorem = "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>";
+
+		const milestoneConfig = [
+			{
+				id: "ms-2025-09-26",
+				date: utcDate(2025, 9, 26),
+				label: "26 septembre 2025",
+				title: "Gazette interplanétaire",
+				main: lorem,
+				secondary: "",
+				editorial: ""
+			},
+			{
+				id: "ms-2025-12-01",
+				date: utcDate(2025, 12, 1),
+				label: "1 décembre 2025",
+				title: "Chronique en saison froide",
+				main: lorem,
+				secondary: "",
+				editorial: ""
+			},
+			{
+				id: "ms-2026-02-11",
+				date: utcDate(2026, 2, 11),
+				label: "11 février 2026",
+				title: "Édition de mi-parcours",
+				main: lorem,
+				secondary: "",
+				editorial: ""
+			}
 		];
 
 		function createMilestones() {
 			const track = document.getElementById("prairie-track");
 			if (!track) return;
 
-			milestoneDates.forEach((ms, idx) => {
+			milestoneConfig.forEach((ms, idx) => {
 				const button = document.createElement("button");
 				button.type = "button";
 				button.className = "prairie-milestone";
 				button.setAttribute("aria-label", ms.label);
 				button.title = ms.label;
+				button.dataset.entryId = ms.id;
 
 				const frac = progressFor(ms.date);
 				button.style.setProperty("--prairie-position", frac.toString());
 
-				// dataset kept simple in case of future use
-				button.dataset.index = String(idx);
+				button.addEventListener("click", function () {
+					selectEntry(ms.id);
+				});
 
 				track.appendChild(button);
+			});
+		}
+
+		function getEntryById(id) {
+			// Endpoints en priorité
+			if (endpointEntries[id]) return endpointEntries[id];
+			return milestoneConfig.find((m) => m.id === id) || null;
+		}
+
+		function clearActiveStates() {
+			document
+				.querySelectorAll(".prairie-milestone")
+				.forEach((el) => el.classList.remove("prairie-milestone--active"));
+
+			document
+				.querySelectorAll(".prairie-endpoint")
+				.forEach((el) => el.classList.remove("prairie-endpoint--active"));
+		}
+
+		function selectEntry(id) {
+			const data = getEntryById(id);
+			if (!data) return;
+
+			const journal = document.getElementById("prairie-journal");
+			const titleEl = document.getElementById("prairie-journal-title");
+			const dateEl = document.getElementById("prairie-journal-date");
+			const mainEl = document.getElementById("prairie-journal-main-article");
+			const secondaryEl = document.getElementById("prairie-journal-secondary");
+			const editorialEl = document.getElementById("prairie-journal-editorial-content");
+
+			if (!journal || !titleEl || !dateEl || !mainEl || !secondaryEl || !editorialEl) {
+				return;
+			}
+
+			titleEl.textContent = data.title || "";
+			dateEl.textContent = data.label || "";
+			mainEl.innerHTML = data.main || "";
+			secondaryEl.innerHTML = data.secondary || "";
+			editorialEl.innerHTML = data.editorial || "";
+
+			clearActiveStates();
+
+			// Marquer l’élément actif sur la barre
+			const milestoneEl = document.querySelector(
+				'.prairie-milestone[data-entry-id="' + id + '"]'
+			);
+			if (milestoneEl) {
+				milestoneEl.classList.add("prairie-milestone--active");
+			}
+
+			if (id === "endpoint-left" || id === "endpoint-right") {
+				const endpointEl = document.querySelector(
+					'.prairie-endpoint[data-entry-id="' + id + '"]'
+				);
+				if (endpointEl) {
+					endpointEl.classList.add("prairie-endpoint--active");
+				}
+			}
+
+			journal.classList.remove("prairie-journal--hidden");
+		}
+
+		function closeJournal() {
+			const journal = document.getElementById("prairie-journal");
+			if (journal) {
+				journal.classList.add("prairie-journal--hidden");
+			}
+			clearActiveStates();
+		}
+
+		function attachEndpointHandlers() {
+			["endpoint-left", "endpoint-right"].forEach((id) => {
+				const endpointEl = document.querySelector(
+					'.prairie-endpoint[data-entry-id="' + id + '"]'
+				);
+				if (!endpointEl) return;
+
+				endpointEl.addEventListener("click", function () {
+					selectEntry(id);
+				});
+
+				endpointEl.addEventListener("keydown", function (evt) {
+					if (evt.key === "Enter" || evt.key === " ") {
+						evt.preventDefault();
+						selectEntry(id);
+					}
+				});
 			});
 		}
 
 		document.addEventListener("DOMContentLoaded", function () {
 			createMilestones();
 			updateProgressOnce();
+			attachEndpointHandlers();
+
+			const closeBtn = document.getElementById("prairie-journal-close");
+			if (closeBtn) {
+				closeBtn.addEventListener("click", closeJournal);
+			}
 		});
 	})();
 </script>

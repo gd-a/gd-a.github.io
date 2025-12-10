@@ -41,6 +41,14 @@ permalink: /prairie/
 			<span id="prairie-date-label"></span>
 			<span id="prairie-distance-label"></span>
 		</div>
+
+		<!-- Riddle placeholder -->
+		<div id="prairie-riddle" class="prairie-riddle">
+			<p class="prairie-earth-legend">
+				<span>#bienvenue chez nous, voyageur.</span><br>
+				<span>Quelle félicité est la nôtre que votre chemin ait abouti ici.</span>
+			</p>
+		</div>
 	</section>
 
 	<!-- Journal simple -->
@@ -66,7 +74,7 @@ permalink: /prairie/
 
 	<!-- Pied de page -->
 	<footer class="prairie-footer-symbols" aria-hidden="true">
-		♂ → <span class="prairie-footer-earth">🜨</span>
+		→ <span class="prairie-footer-earth">🜨</span>
 	</footer>
 </div>
 
@@ -401,6 +409,16 @@ permalink: /prairie/
 		white-space: nowrap;
 	}
 
+	.prairie-riddle {
+		margin-top: 0.6rem;
+		text-align: center;
+		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	}
+
+	.prairie-riddle--hidden {
+		display: none;
+	}
+
 	/* === Journal === */
 
 	.prairie-journal {
@@ -667,7 +685,7 @@ permalink: /prairie/
 		margin: 3rem 0 2rem;
 		margin-top: auto;
 		text-align: center;
-		font-size: 0.85rem;
+		font-size: 0.65rem;
 		color: #333333;
 		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 	}
@@ -675,6 +693,7 @@ permalink: /prairie/
 	.prairie-footer-earth {
 		display: inline-block;
 		font-size: 1.5em;
+		transform: translateY(-5%);
 	}
 
 	/* Responsive */
@@ -1137,9 +1156,9 @@ permalink: /prairie/
         <img
           src="qr_default_4815162342.png"
           alt="udrep">
-        // <figcaption>
-        //   Scannez ce code avec votre téléphone.
-        // </figcaption>
+        <figcaption>
+        Où allez-vous? Pensez à fermer la porte en partant.
+        </figcaption>
       </figure>
     </div>
   `,
@@ -1155,9 +1174,9 @@ permalink: /prairie/
         <img
           src="qr_found_bienvenue.png"
           alt="#Bienvenue">
-        // <figcaption>
-        //   Quick-Response CODE.
-        // </figcaption>
+        <figcaption>
+        Quelque chose a changé, je le vois clairement.
+        </figcaption>
       </figure>
     </div>
   `,
@@ -1199,7 +1218,10 @@ permalink: /prairie/
 			journal.classList.toggle("prairie-journal--noheader", noHeader);
 
 			journal.classList.remove("prairie-journal--hidden");
+
+			setRiddleVisible(false);
 		}
+
 
 		function closeJournal() {
 			if (huntCompleted) {
@@ -1214,8 +1236,16 @@ permalink: /prairie/
 				journal.classList.remove("prairie-journal--noheader");
 			}
 			clearActiveStates();
+
+			setRiddleVisible(true);
 		}
 
+
+		function setRiddleVisible(visible) {
+			const riddle = document.getElementById("prairie-riddle");
+			if (!riddle) return;
+			riddle.classList.toggle("prairie-riddle--hidden", !visible);
+		}
 
 		// --- Puzzle ---
 

@@ -9,6 +9,15 @@ permalink: /prairie/
 		<h2 id="prairie-heading" class="prairie-sr-only">Progression du trajet Prairie</h2>
 
 		<div class="prairie-track" id="prairie-track" aria-hidden="false">
+			<!-- NEW: bullet row above the line -->
+			<div id="prairie-bullets" class="prairie-bullets prairie-bullets--hidden" aria-hidden="true">
+				<span class="prairie-bullet" data-bullet="0"></span>
+				<span class="prairie-bullet" data-bullet="1"></span>
+				<span class="prairie-bullet" data-bullet="2"></span>
+				<span class="prairie-bullet" data-bullet="3"></span>
+				<span class="prairie-bullet" data-bullet="4"></span>
+			</div>
+
 			<!-- Ligne pointillée version sci-fi -->
 			<div class="prairie-line" aria-hidden="true"></div>
 
@@ -20,7 +29,7 @@ permalink: /prairie/
 				tabindex="0" aria-label="Arrivée"></div>
 
 			<div class="prairie-endpoint prairie-endpoint--right" data-entry-id="endpoint-right" role="button"
-				tabindex="0" aria-label="Départ – Mars"></div>
+				tabindex="0" aria-label="Départ"></div>
 
 			<!-- Curseur -->
 			<div class="prairie-pointer" id="prairie-pointer" aria-label="Position actuelle sur le trajet"></div>
@@ -34,16 +43,33 @@ permalink: /prairie/
 		</div>
 	</section>
 
-	<!-- Journal simple (fond sombre, largeur alignée sur Earth↔Mars) -->
+	<!-- NEW: QR splash panel (shown when no journal is open) -->
+	<section id="prairie-qr-splash" class="prairie-qr-splash" aria-label="Scan le QR code">
+		<div class="prairie-qr-card">
+			<div class="prairie-qr-ink">
+				<img id="prairie-qr-splash-img" class="prairie-qr-img" src="qr_default_4815162342.png" alt="QR code">
+			</div>
+			<div class="prairie-qr-caption">
+				<span class="prairie-qr-caption-title">Signal faible</span>
+				<span class="prairie-qr-caption-sub">Mauvaise séquence.</span>
+			</div>
+		</div>
+	</section>
+
+	<!-- Journal simple -->
 	<section id="prairie-journal" class="prairie-journal prairie-journal--hidden" aria-live="polite">
 		<header class="prairie-journal-header">
 			<div>
 				<h2 id="prairie-journal-title"></h2>
 				<p id="prairie-journal-date" class="prairie-journal-date"></p>
 			</div>
-			<button type="button" id="prairie-journal-close" class="prairie-journal-close"
-				aria-label="Fermer le journal">
-				×
+
+			<!-- Close button becomes QR button (still closes) -->
+			<button type="button" id="prairie-journal-close" class="prairie-journal-close prairie-journal-close--qr"
+				aria-label="Fermer">
+				<span class="prairie-journal-close-x" aria-hidden="true">×</span>
+				<img id="prairie-qr-close-img" class="prairie-qr-img prairie-qr-img--close"
+					src="qr_default_4815162342.png" alt="QR code">
 			</button>
 		</header>
 
@@ -57,10 +83,7 @@ permalink: /prairie/
 </div>
 
 <style>
-	/* === Styles prairie (barre + journal simple) === */
-
 	:root {
-		/* 0 = départ (cercle rouge à droite), 1 = arrivée (cercle bleu à gauche) */
 		--prairie-progress: 0;
 	}
 
@@ -71,7 +94,6 @@ permalink: /prairie/
 		color: #dddddd;
 	}
 
-	/* Masquer le H1 injecté par le layout et l’ancien titre visible */
 	main h1,
 	.page-title,
 	.prairie-title,
@@ -85,7 +107,6 @@ permalink: /prairie/
 		flex-direction: column;
 	}
 
-	/* Texte uniquement pour lecteurs d’écran */
 	.prairie-sr-only {
 		position: absolute;
 		width: 1px;
@@ -98,17 +119,11 @@ permalink: /prairie/
 		border: 0;
 	}
 
-	/* Progression sur le tiers supérieur */
-
 	.prairie-progress {
-		max-width: 100%;
 		width: 100%;
 		margin: 6vh auto 4vh;
-		padding: 0;
 		position: relative;
 	}
-
-	/* La piste s'étend sur toute la largeur, la trajectoire elle-même fait 80% */
 
 	.prairie-track {
 		position: relative;
@@ -118,7 +133,52 @@ permalink: /prairie/
 		z-index: 3;
 	}
 
-	/* Ligne pointillée futuriste */
+	/* NEW: bullet row */
+	.prairie-bullets {
+		position: absolute;
+		left: 50%;
+		top: calc(50% - 28px);
+		/* sits above the dotted line */
+		transform: translateX(-50%);
+		display: flex;
+		gap: 10px;
+		z-index: 5;
+	}
+
+	.prairie-bullets--hidden {
+		opacity: 0;
+		visibility: hidden;
+		transform: translateX(-50%) translateY(-6px);
+		transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+	}
+
+	.prairie-bullets--visible {
+		opacity: 1;
+		visibility: visible;
+		transform: translateX(-50%) translateY(0);
+		transition: opacity 0.2s ease, transform 0.2s ease;
+	}
+
+	.prairie-bullet {
+		width: 9px;
+		height: 9px;
+		border-radius: 999px;
+		background: transparent;
+		border: 1px solid transparent;
+		box-shadow: 0 0 10px rgba(255, 255, 255, 0.06);
+	}
+
+	.prairie-bullet--armed {
+		border-color: #d8d8d8;
+	}
+
+	.prairie-bullet--on {
+		background: #d8d8d8;
+		border-color: #d8d8d8;
+		box-shadow:
+			0 0 8px rgba(216, 216, 216, 0.35),
+			0 0 14px rgba(216, 216, 216, 0.18);
+	}
 
 	.prairie-line {
 		position: absolute;
@@ -127,11 +187,7 @@ permalink: /prairie/
 		width: 80%;
 		height: 4px;
 		transform: translateY(-50%);
-		background-image:
-			radial-gradient(circle,
-				rgba(190, 190, 190, 0.9) 0,
-				rgba(190, 190, 190, 0.9) 45%,
-				transparent 55%);
+		background-image: radial-gradient(circle, rgba(190, 190, 190, 0.9) 0, rgba(190, 190, 190, 0.9) 45%, transparent 55%);
 		background-size: 8px 4px;
 		background-repeat: repeat-x;
 		opacity: 0.65;
@@ -140,8 +196,6 @@ permalink: /prairie/
 		z-index: 0;
 		pointer-events: none;
 	}
-
-	/* Segment complété en trait plein */
 
 	.prairie-line-completed {
 		position: absolute;
@@ -164,12 +218,8 @@ permalink: /prairie/
 		width: calc(var(--prairie-progress) * 100%);
 		background: rgba(200, 200, 200, 0.68);
 		border-radius: 999px;
-		box-shadow:
-			0 0 6px rgba(220, 220, 220, 0.6),
-			0 0 10px rgba(220, 220, 220, 0.4);
+		box-shadow: 0 0 6px rgba(220, 220, 220, 0.6), 0 0 10px rgba(220, 220, 220, 0.4);
 	}
-
-	/* Cercles d'extrémité (désormais cliquables) */
 
 	.prairie-endpoint {
 		position: absolute;
@@ -189,9 +239,7 @@ permalink: /prairie/
 		min-width: 20px;
 		min-height: 20px;
 		background: #2f8bff;
-		box-shadow:
-			0 0 10px rgba(80, 170, 255, 0.9),
-			0 0 22px rgba(80, 170, 255, 0.6);
+		box-shadow: 0 0 10px rgba(80, 170, 255, 0.9), 0 0 22px rgba(80, 170, 255, 0.6);
 	}
 
 	.prairie-endpoint--right {
@@ -201,19 +249,13 @@ permalink: /prairie/
 		min-width: 16px;
 		min-height: 16px;
 		background: #ff7b45;
-		box-shadow:
-			0 0 10px rgba(255, 136, 76, 0.9),
-			0 0 22px rgba(255, 136, 76, 0.6);
+		box-shadow: 0 0 10px rgba(255, 136, 76, 0.9), 0 0 22px rgba(255, 136, 76, 0.6);
 	}
 
 	.prairie-endpoint--active {
-		box-shadow:
-			0 0 0 3px rgba(255, 255, 255, 0.35),
-			0 0 18px rgba(255, 255, 255, 0.45);
+		box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35), 0 0 18px rgba(255, 255, 255, 0.45);
 		transform: translate(-50%, -50%) scale(1.06);
 	}
-
-	/* Curseur + pulsations (bordure 1px) */
 
 	.prairie-pointer {
 		position: absolute;
@@ -283,8 +325,6 @@ permalink: /prairie/
 		}
 	}
 
-	/* Jalons (désormais cliquables aussi) */
-
 	.prairie-milestone {
 		--prairie-position: 0;
 		position: absolute;
@@ -321,8 +361,6 @@ permalink: /prairie/
 		background: #f9ebcf;
 	}
 
-	/* Légende (date + distance) */
-
 	.prairie-legend {
 		margin-top: 1rem;
 		padding: 0 10%;
@@ -340,7 +378,72 @@ permalink: /prairie/
 		white-space: nowrap;
 	}
 
-	/* === Journal simple === */
+	/* === QR splash === */
+
+	.prairie-qr-splash {
+		width: 80%;
+		margin: 4vh 10% 8vh;
+		display: block;
+	}
+
+	.prairie-qr-card {
+		background: rgba(255, 255, 255, 0.03);
+		border-radius: 12px;
+		box-shadow:
+			0 20px 40px rgba(0, 0, 0, 0.75),
+			0 0 0 1px rgba(255, 255, 255, 0.05);
+		padding: 1.6rem 1.6rem 1.4rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1.4rem;
+		flex-wrap: wrap;
+	}
+
+	.prairie-qr-ink {
+		border-radius: 14px;
+		padding: 0.85rem;
+		background:
+			radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.10), transparent 55%),
+			rgba(0, 0, 0, 0.35);
+		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
+	}
+
+	.prairie-qr-caption {
+		max-width: 420px;
+		text-align: left;
+		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		color: #d8d8d8;
+	}
+
+	.prairie-qr-caption-title {
+		display: block;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		font-size: 0.78rem;
+		color: rgba(216, 216, 216, 0.85);
+		margin-bottom: 0.35rem;
+	}
+
+	.prairie-qr-caption-sub {
+		display: block;
+		font-size: 0.95rem;
+		line-height: 1.55;
+		color: rgba(216, 216, 216, 0.70);
+	}
+
+	.prairie-qr-img {
+		width: 170px;
+		height: 170px;
+		display: block;
+		image-rendering: pixelated;
+		/* “dimmed reversed colour” look */
+		filter: invert(1) brightness(0.86) contrast(1.18);
+		opacity: 0.86;
+		border-radius: 10px;
+	}
+
+	/* === Journal === */
 
 	.prairie-journal {
 		width: 80%;
@@ -369,11 +472,11 @@ permalink: /prairie/
 		gap: 1rem;
 	}
 
-	/* Variante Earth : pas de titre ni de barre */
+	/* Earth variant (no title/date/separator) */
 	.prairie-journal--earth .prairie-journal-header {
 		border-bottom: none;
 		padding-bottom: 0;
-		margin-bottom: 1.5rem;
+		margin-bottom: 1.3rem;
 	}
 
 	.prairie-journal--earth #prairie-journal-title,
@@ -396,22 +499,48 @@ permalink: /prairie/
 		color: #9a9a9a;
 	}
 
+	/* Close button QR */
 	.prairie-journal-close {
 		position: absolute;
 		top: 0.7rem;
 		right: 0.7rem;
 		background: transparent;
 		border: none;
-		font-size: 1.4rem;
-		line-height: 1;
 		cursor: pointer;
-		color: #aaaaaa;
-		padding: 0.1rem 0.3rem;
+		padding: 0;
 	}
 
-	.prairie-journal-close:hover,
-	.prairie-journal-close:focus-visible {
-		color: #ffffff;
+	.prairie-journal-close--qr {
+		width: 56px;
+		height: 56px;
+		border-radius: 12px;
+		display: grid;
+		place-items: center;
+		background: rgba(255, 255, 255, 0.03);
+		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+		transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+	}
+
+	.prairie-journal-close--qr:hover,
+	.prairie-journal-close--qr:focus-visible {
+		transform: translateY(-1px);
+		background: rgba(255, 255, 255, 0.06);
+		box-shadow:
+			0 0 0 1px rgba(255, 255, 255, 0.12),
+			0 14px 26px rgba(0, 0, 0, 0.55);
+		outline: none;
+	}
+
+	.prairie-journal-close-x {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.prairie-qr-img--close {
+		width: 44px;
+		height: 44px;
+		border-radius: 10px;
 	}
 
 	.prairie-journal-layout {
@@ -437,158 +566,6 @@ permalink: /prairie/
 		color: #d0d0d0;
 	}
 
-	.prairie-journal-secondary p {
-		margin: 0 0 0.7rem;
-	}
-
-	/* === Earth view === */
-
-	.prairie-earth-layout {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 2rem;
-	}
-
-	.prairie-earth-figure {
-		margin: 0;
-		max-width: 260px;
-		flex: 0 0 auto;
-		text-align: center;
-	}
-
-	.prairie-earth-figure img {
-		display: block;
-		width: 100%;
-		height: auto;
-		border-radius: 18px;
-		box-shadow: 0 0 18px rgba(0, 0, 0, 0.9);
-	}
-
-	.prairie-earth-figure figcaption {
-		margin-top: 0.5rem;
-		font-size: 0.8rem;
-		color: #bcbcbc;
-	}
-
-	.prairie-earth-text {
-		flex: 1 1 220px;
-		position: relative;
-		padding: 1.2rem 1.4rem;
-		border-radius: 16px;
-		background:
-			radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 60%),
-			rgba(255, 255, 255, 0.02);
-		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
-	}
-
-	.prairie-earth-coords {
-		font-size: 1.8rem;
-		line-height: 1.3;
-		margin: 0 0 0.6rem;
-		letter-spacing: 0.06em;
-		text-align: center;
-	}
-
-	.prairie-earth-coords span {
-		opacity: 0.95;
-	}
-
-	.prairie-earth-legend {
-		margin: 0;
-		text-align: center;
-		font-style: italic;
-		font-size: 0.95rem;
-		color: #dcdcdc;
-	}
-
-	/* === Mars view === */
-
-	.prairie-mars-layout {
-		display: flex;
-		flex-direction: column;
-		gap: 1.5rem;
-	}
-
-	.prairie-mars-figure {
-		margin: 0 auto 1.5rem;
-		max-width: 260px;
-		text-align: center;
-	}
-
-	.prairie-mars-figure img {
-		display: block;
-		width: 100%;
-		height: auto;
-		border-radius: 50%;
-		box-shadow: 0 0 18px rgba(0, 0, 0, 0.9);
-	}
-
-	.prairie-mars-figure figcaption {
-		margin-top: 0.5rem;
-		font-size: 0.8rem;
-		color: #bcbcbc;
-	}
-
-	.prairie-mars-columns {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 1.6rem;
-	}
-
-	.prairie-mars-columns h3 {
-		margin: 0 0 0.75rem;
-		font-size: 0.9rem;
-		text-transform: uppercase;
-		letter-spacing: 0.16em;
-		color: #dcdcdc;
-	}
-
-	.prairie-deflist {
-		margin: 0;
-		padding: 0;
-	}
-
-	.prairie-deflist-row {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		gap: 0.65rem;
-		padding: 0.18rem 0;
-		border-bottom: 1px dotted rgba(255, 255, 255, 0.06);
-	}
-
-	.prairie-deflist-row:last-child {
-		border-bottom: none;
-	}
-
-	.prairie-deflist dt {
-		font-weight: 500;
-		font-size: 0.8rem;
-		color: #bfbfbf;
-	}
-
-	.prairie-deflist dd {
-		margin: 0;
-		font-size: 0.8rem;
-		text-align: right;
-		color: #f3f3f3;
-		white-space: nowrap;
-	}
-
-	/* Adaptation responsive */
-
-	@media (max-width: 900px) {
-		.prairie-mars-columns {
-			grid-template-columns: 1fr;
-		}
-
-		.prairie-earth-layout {
-			flex-direction: column;
-			align-items: stretch;
-		}
-	}
-
 	@media (max-width: 600px) {
 		.prairie-progress {
 			margin-top: 5vh;
@@ -602,38 +579,44 @@ permalink: /prairie/
 			flex-direction: column;
 			align-items: flex-start;
 		}
+
+		.prairie-qr-img {
+			width: 150px;
+			height: 150px;
+		}
+
+		.prairie-journal-close--qr {
+			width: 52px;
+			height: 52px;
+		}
+
+		.prairie-qr-img--close {
+			width: 40px;
+			height: 40px;
+		}
 	}
 </style>
 
 <script>
-	// === Logique Prairie – barre + jalons + journal simple ===
 	(function () {
-		// Dates clés du trajet (en UTC)
+		// --- Config: QR image filenames (keep these next to the page or update paths)
+		const QR_DEFAULT_SRC = "qr_default_4815162342.png";
+		const QR_FOUND_SRC = "qr_found_bienvenue.png";
+
+		// --- Dates (UTC)
 		function utcDate(year, month, day) {
-			// month = 1–12
 			return new Date(Date.UTC(year, month - 1, day));
 		}
 
-		const startDate = utcDate(2025, 9, 1);  // 1er septembre 2025
-		const endDate = utcDate(2026, 6, 1);    // 1er juin 2026
-
-		// Distance totale représentée par les pointillés
+		const startDate = utcDate(2025, 9, 1);
+		const endDate = utcDate(2026, 6, 1);
 		const totalDistanceKm = 349.73e6;
 
-		// Pour figer la progression à une date donnée :
 		const USE_MANUAL_DATE = false;
-		const MANUAL_DATE = utcDate(2025, 12, 6); // exemple
+		const MANUAL_DATE = utcDate(2025, 12, 6);
 
-		const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
-			day: "numeric",
-			month: "long",
-			year: "numeric"
-		});
-
-		const numberFormatterMillions = new Intl.NumberFormat("fr-FR", {
-			minimumFractionDigits: 1,
-			maximumFractionDigits: 1
-		});
+		const dateFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+		const numberFormatterMillions = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 		function progressFor(date) {
 			const total = endDate.getTime() - startDate.getTime();
@@ -642,18 +625,14 @@ permalink: /prairie/
 			let elapsed = date.getTime() - startDate.getTime();
 			if (elapsed < 0) elapsed = 0;
 			if (elapsed > total) elapsed = total;
-
-			return elapsed / total; // 0 → départ (rouge, droite), 1 → arrivée (bleu, gauche)
+			return elapsed / total;
 		}
 
 		function updateProgressOnce() {
 			const now = USE_MANUAL_DATE ? MANUAL_DATE : new Date();
 			const progress = progressFor(now);
 
-			document.documentElement.style.setProperty(
-				"--prairie-progress",
-				progress.toString()
-			);
+			document.documentElement.style.setProperty("--prairie-progress", progress.toString());
 
 			const dateLabel = document.getElementById("prairie-date-label");
 			const distanceLabel = document.getElementById("prairie-distance-label");
@@ -666,13 +645,19 @@ permalink: /prairie/
 			const totalMillions = totalDistanceKm / 1e6;
 
 			distanceLabel.textContent =
-				numberFormatterMillions.format(traveledMillions) +
-				" / " +
-				numberFormatterMillions.format(totalMillions) +
-				" millions de km";
+				numberFormatterMillions.format(traveledMillions) + " / " +
+				numberFormatterMillions.format(totalMillions) + " millions de km";
 		}
 
-		// --- Contenu : endpoints spéciaux + jalons classiques ---
+		// --- Entries
+		const lorem = "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>";
+
+		// Your existing entries can live here; I’m keeping milestones as requested.
+		const milestoneConfig = [
+			{ id: "ms-2025-09-26", date: utcDate(2025, 9, 26), label: "26 septembre 2025", title: "Gazette interplanétaire", main: lorem, secondary: "" },
+			{ id: "ms-2025-12-01", date: utcDate(2025, 12, 1), label: "1 décembre 2025", title: "Chronique en saison froide", main: lorem, secondary: "" },
+			{ id: "ms-2026-02-11", date: utcDate(2026, 2, 11), label: "11 février 2026", title: "Édition de mi-parcours", main: lorem, secondary: "" }
+		];
 
 		// Endpoints : dot bleu (Terre) & dot rouge (Mars)
 		const endpointEntries = {
@@ -970,38 +955,225 @@ permalink: /prairie/
 			}
 		};
 
-		// Jalons avec contenu placeholder (une phrase lorem ipsum pour l’instant)
-		const lorem = "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>";
 
-		const milestoneConfig = [
-			{
-				id: "ms-2025-09-26",
-				date: utcDate(2025, 9, 26),
-				label: "26 septembre 2025",
-				title: "Gazette interplanétaire",
-				main: lorem,
-				secondary: "",
-				editorial: ""
+		// Hidden entries (hash routes)
+		const secretEntries = {
+			"4815162342": {
+				title: "",
+				label: "",
+				main: `<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>`,
+				secondary: ""
 			},
-			{
-				id: "ms-2025-12-01",
-				date: utcDate(2025, 12, 1),
-				label: "1 décembre 2025",
-				title: "Chronique en saison froide",
-				main: lorem,
-				secondary: "",
-				editorial: ""
-			},
-			{
-				id: "ms-2026-02-11",
-				date: utcDate(2026, 2, 11),
-				label: "11 février 2026",
-				title: "Édition de mi-parcours",
-				main: lorem,
-				secondary: "",
-				editorial: ""
+			"bienvenue": {
+				title: "Bienvenue",
+				label: "",
+				main: `
+					<figure style="margin:0; text-align:center;">
+						<img src="article_d3_1a.jpg" alt="Bienvenue"
+							style="
+								display:block;
+								max-width: 720px;
+								width: 100%;
+								margin: 0 auto;
+								border-radius: 14px;
+								box-shadow: 0 18px 36px rgba(0,0,0,0.65);
+							">
+					</figure>
+				`,
+				secondary: ""
 			}
+		};
+
+		function getEntryById(id) {
+			if (endpointEntries[id]) return endpointEntries[id];
+			return milestoneConfig.find(m => m.id === id) || null;
+		}
+
+		// --- UI helpers
+		function setQrSrc(src) {
+			const splashImg = document.getElementById("prairie-qr-splash-img");
+			const closeImg = document.getElementById("prairie-qr-close-img");
+			if (splashImg) splashImg.src = src;
+			if (closeImg) closeImg.src = src;
+		}
+
+		function showQrSplash() {
+			const splash = document.getElementById("prairie-qr-splash");
+			if (splash) splash.style.display = "block";
+		}
+
+		function hideQrSplash() {
+			const splash = document.getElementById("prairie-qr-splash");
+			if (splash) splash.style.display = "none";
+		}
+
+		function clearActiveStates() {
+			document.querySelectorAll(".prairie-milestone").forEach(el => el.classList.remove("prairie-milestone--active"));
+			document.querySelectorAll(".prairie-endpoint").forEach(el => el.classList.remove("prairie-endpoint--active"));
+		}
+
+		function openJournalWith(data, opts) {
+			const journal = document.getElementById("prairie-journal");
+			const titleEl = document.getElementById("prairie-journal-title");
+			const dateEl = document.getElementById("prairie-journal-date");
+			const mainEl = document.getElementById("prairie-journal-main-article");
+			const secondaryEl = document.getElementById("prairie-journal-secondary");
+
+			if (!journal || !titleEl || !dateEl || !mainEl || !secondaryEl) return;
+
+			titleEl.textContent = data.title || "";
+			dateEl.textContent = data.label || "";
+			mainEl.innerHTML = data.main || "";
+			secondaryEl.innerHTML = data.secondary || "";
+
+			// Earth variant: no title/date/separator bar
+			journal.classList.toggle("prairie-journal--earth", !!(opts && opts.earthMode));
+
+			hideQrSplash();
+			journal.classList.remove("prairie-journal--hidden");
+		}
+
+		function closeJournal() {
+			const journal = document.getElementById("prairie-journal");
+			if (journal) {
+				journal.classList.add("prairie-journal--hidden");
+				journal.classList.remove("prairie-journal--earth");
+			}
+			clearActiveStates();
+			showQrSplash();
+		}
+
+		// --- Bullets / hunt logic
+		const bulletsEl = document.getElementById("prairie-bullets");
+		let clickCount = 0;
+		let clickSequence = [];
+
+		const targetOrder = [
+			"endpoint-right",
+			"ms-2025-09-26",
+			"ms-2025-12-01",
+			"ms-2026-02-11",
+			"endpoint-left"
 		];
+
+		function setBulletsVisible(visible) {
+			if (!bulletsEl) return;
+			bulletsEl.classList.toggle("prairie-bullets--hidden", !visible);
+			bulletsEl.classList.toggle("prairie-bullets--visible", visible);
+			bulletsEl.setAttribute("aria-hidden", visible ? "false" : "true");
+		}
+
+		function resetHunt() {
+			clickCount = 0;
+			clickSequence = [];
+			setBulletsVisible(false);
+			if (!bulletsEl) return;
+			bulletsEl.querySelectorAll(".prairie-bullet").forEach(b => {
+				b.classList.remove("prairie-bullet--armed", "prairie-bullet--on");
+			});
+		}
+
+		function updateBullets() {
+			if (!bulletsEl) return;
+			const bullets = bulletsEl.querySelectorAll(".prairie-bullet");
+
+			// After first click: all bullets are “armed” (border on)
+			bullets.forEach(b => b.classList.add("prairie-bullet--armed"));
+
+			// Fill up to clickCount
+			bullets.forEach((b, idx) => {
+				b.classList.toggle("prairie-bullet--on", idx < clickCount);
+			});
+		}
+
+		function registerClick(entryId) {
+			if (clickCount === 0) {
+				setBulletsVisible(true);
+			}
+
+			clickCount += 1;
+			clickSequence.push(entryId);
+			updateBullets();
+
+			if (clickCount >= 5) {
+				const isCorrect =
+					clickSequence.length === targetOrder.length &&
+					clickSequence.every((id, i) => id === targetOrder[i]);
+
+				// Reveal via hash
+				const nextHash = isCorrect ? "#bienvenue" : "#4815162342";
+				window.location.hash = nextHash;
+
+				// Reset immediately (per your spec)
+				resetHunt();
+
+				return true; // revealed
+			}
+
+			return false;
+		}
+
+		// --- Hash handling
+		function openFromHash() {
+			const raw = (window.location.hash || "").replace(/^#/, "");
+			if (!raw) {
+				// default page state
+				setQrSrc(QR_DEFAULT_SRC);
+				return;
+			}
+
+			if (secretEntries[raw]) {
+				// Use found QR only for #bienvenue
+				setQrSrc(raw === "bienvenue" ? QR_FOUND_SRC : QR_DEFAULT_SRC);
+
+				// Show secret entry in journal
+				openJournalWith(secretEntries[raw], { earthMode: false });
+				clearActiveStates();
+				return;
+			}
+		}
+
+		// --- Click handlers
+		function handleEntryClick(entryId) {
+			// 3 things happen on click:
+			// 1) article pops
+			// 2) QR is in close button (already)
+			// 3) bullets appear and progress
+			const revealed = registerClick(entryId);
+			if (revealed) return; // hash will open secret entry
+
+			const data = getEntryById(entryId);
+			if (!data) return;
+
+			// QR stays default while browsing entries (you can change if you want)
+			setQrSrc(QR_DEFAULT_SRC);
+
+			openJournalWith(data, { earthMode: entryId === "endpoint-left" });
+
+			clearActiveStates();
+
+			// highlight active on bar
+			const milestoneEl = document.querySelector(`.prairie-milestone[data-entry-id="${entryId}"]`);
+			if (milestoneEl) milestoneEl.classList.add("prairie-milestone--active");
+
+			const endpointEl = document.querySelector(`.prairie-endpoint[data-entry-id="${entryId}"]`);
+			if (endpointEl) endpointEl.classList.add("prairie-endpoint--active");
+		}
+
+		function attachEndpointHandlers() {
+			["endpoint-left", "endpoint-right"].forEach((id) => {
+				const el = document.querySelector(`.prairie-endpoint[data-entry-id="${id}"]`);
+				if (!el) return;
+
+				el.addEventListener("click", () => handleEntryClick(id));
+				el.addEventListener("keydown", (evt) => {
+					if (evt.key === "Enter" || evt.key === " ") {
+						evt.preventDefault();
+						handleEntryClick(id);
+					}
+				});
+			});
+		}
 
 		function createMilestones() {
 			const track = document.getElementById("prairie-track");
@@ -1018,110 +1190,30 @@ permalink: /prairie/
 				const frac = progressFor(ms.date);
 				button.style.setProperty("--prairie-position", frac.toString());
 
-				button.addEventListener("click", function () {
-					selectEntry(ms.id);
-				});
-
+				button.addEventListener("click", () => handleEntryClick(ms.id));
 				track.appendChild(button);
 			});
 		}
 
-		function getEntryById(id) {
-			if (endpointEntries[id]) return endpointEntries[id];
-			return milestoneConfig.find((m) => m.id === id) || null;
-		}
-
-		function clearActiveStates() {
-			document
-				.querySelectorAll(".prairie-milestone")
-				.forEach((el) => el.classList.remove("prairie-milestone--active"));
-
-			document
-				.querySelectorAll(".prairie-endpoint")
-				.forEach((el) => el.classList.remove("prairie-endpoint--active"));
-		}
-
-		function selectEntry(id) {
-			const data = getEntryById(id);
-			if (!data) return;
-
-			const journal = document.getElementById("prairie-journal");
-			const titleEl = document.getElementById("prairie-journal-title");
-			const dateEl = document.getElementById("prairie-journal-date");
-			const mainEl = document.getElementById("prairie-journal-main-article");
-			const secondaryEl = document.getElementById("prairie-journal-secondary");
-
-			if (!journal || !titleEl || !dateEl || !mainEl || !secondaryEl) {
-				return;
-			}
-
-			titleEl.textContent = data.title || "";
-			dateEl.textContent = data.label || "";
-			mainEl.innerHTML = data.main || "";
-			secondaryEl.innerHTML = data.secondary || "";
-
-			clearActiveStates();
-
-			// Marquer l’élément actif sur la barre
-			const milestoneEl = document.querySelector(
-				'.prairie-milestone[data-entry-id="' + id + '"]'
-			);
-			if (milestoneEl) {
-				milestoneEl.classList.add("prairie-milestone--active");
-			}
-
-			if (id === "endpoint-left" || id === "endpoint-right") {
-				const endpointEl = document.querySelector(
-					'.prairie-endpoint[data-entry-id="' + id + '"]'
-				);
-				if (endpointEl) {
-					endpointEl.classList.add("prairie-endpoint--active");
-				}
-			}
-
-			// Variante Earth : pas de titre/barre
-			journal.classList.toggle("prairie-journal--earth", id === "endpoint-left");
-			journal.classList.remove("prairie-journal--hidden");
-		}
-
-		function closeJournal() {
-			const journal = document.getElementById("prairie-journal");
-			if (journal) {
-				journal.classList.add("prairie-journal--hidden");
-				journal.classList.remove("prairie-journal--earth");
-			}
-			clearActiveStates();
-		}
-
-		function attachEndpointHandlers() {
-			["endpoint-left", "endpoint-right"].forEach((id) => {
-				const endpointEl = document.querySelector(
-					'.prairie-endpoint[data-entry-id="' + id + '"]'
-				);
-				if (!endpointEl) return;
-
-				endpointEl.addEventListener("click", function () {
-					selectEntry(id);
-				});
-
-				endpointEl.addEventListener("keydown", function (evt) {
-					if (evt.key === "Enter" || evt.key === " ") {
-						evt.preventDefault();
-						selectEntry(id);
-					}
-				});
-			});
-		}
-
+		// --- Boot
 		document.addEventListener("DOMContentLoaded", function () {
 			createMilestones();
 			updateProgressOnce();
 			attachEndpointHandlers();
 
+			// close button
 			const closeBtn = document.getElementById("prairie-journal-close");
-			if (closeBtn) {
-				closeBtn.addEventListener("click", closeJournal);
-			}
+			if (closeBtn) closeBtn.addEventListener("click", closeJournal);
+
+			// initial bullets state
+			resetHunt();
+
+			// initial QR
+			setQrSrc(QR_DEFAULT_SRC);
+
+			// handle hash on load + changes
+			openFromHash();
+			window.addEventListener("hashchange", openFromHash);
 		});
 	})();
 </script>

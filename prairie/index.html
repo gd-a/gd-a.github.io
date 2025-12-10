@@ -517,115 +517,40 @@ permalink: /prairie/
 
 	/* QR code */
 
+	/* QR code – simple, toned down */
+
 	.prairie-qr-layout {
 		display: flex;
 		justify-content: center;
-		align-items: center;
-		margin-top: 1rem;
-	}
-
-	.prairie-qr-card {
-		position: relative;
-		max-width: 360px;
-		width: 100%;
-		padding: 1.6rem 1.8rem 2rem;
-		border-radius: 20px;
-		background:
-			radial-gradient(circle at top left, rgba(255, 255, 255, 0.07), transparent 55%),
-			radial-gradient(circle at bottom right, rgba(0, 160, 255, 0.08), transparent 60%),
-			rgba(10, 10, 10, 0.96);
-		box-shadow:
-			0 18px 40px rgba(0, 0, 0, 0.9),
-			0 0 0 1px rgba(255, 255, 255, 0.04);
-		overflow: hidden;
-		animation: prairieQrFloat 7s ease-in-out infinite alternate;
-	}
-
-	.prairie-qr-card::before {
-		content: "";
-		position: absolute;
-		inset: -40%;
-		background: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 70%);
-		opacity: 0.35;
-		filter: blur(18px);
-		pointer-events: none;
-	}
-
-	/* Variante: succès / échec */
-	.prairie-qr-card--success {
-		background:
-			radial-gradient(circle at top left, rgba(64, 255, 192, 0.18), transparent 60%),
-			radial-gradient(circle at bottom right, rgba(0, 120, 255, 0.16), transparent 65%),
-			rgba(8, 16, 16, 0.98);
-	}
-
-	.prairie-qr-card--success::before {
-		background: radial-gradient(circle at top, rgba(40, 255, 200, 0.22), transparent 70%);
-	}
-
-	.prairie-qr-card--error {
-		background:
-			radial-gradient(circle at top left, rgba(255, 140, 80, 0.22), transparent 60%),
-			radial-gradient(circle at bottom right, rgba(255, 40, 120, 0.14), transparent 65%),
-			rgba(20, 8, 8, 0.98);
-	}
-
-	.prairie-qr-card--error::before {
-		background: radial-gradient(circle at top, rgba(255, 120, 80, 0.25), transparent 70%);
-	}
-
-	@keyframes prairieQrFloat {
-		0% {
-			transform: translateY(0);
-			box-shadow:
-				0 18px 40px rgba(0, 0, 0, 0.9),
-				0 0 0 1px rgba(255, 255, 255, 0.04);
-		}
-
-		100% {
-			transform: translateY(-6px);
-			box-shadow:
-				0 24px 52px rgba(0, 0, 0, 0.95),
-				0 0 0 1px rgba(255, 255, 255, 0.06);
-		}
+		margin-top: 0.5rem;
 	}
 
 	.prairie-qr-figure {
-		position: relative;
-		margin: 0;
+		margin: 0 auto;
+		max-width: 260px;
 		text-align: center;
-		z-index: 1;
+		padding: 0.6rem;
+		border-radius: 16px;
+		background: rgba(255, 255, 255, 0.02);
+		box-shadow: 0 12px 24px rgba(0, 0, 0, 0.8);
 	}
 
 	.prairie-qr-figure img {
 		display: block;
 		width: 100%;
-		max-width: 240px;
 		height: auto;
-		margin: 0 auto;
-		border-radius: 18px;
-		border: 1px solid rgba(255, 255, 255, 0.14);
-		box-shadow:
-			0 0 18px rgba(0, 0, 0, 0.9),
-			0 0 26px rgba(255, 255, 255, 0.16);
+		border-radius: 12px;
+		/* soften the harsh black/white without breaking scanability */
+		filter: brightness(0.9) contrast(0.9);
+		image-rendering: crisp-edges;
 	}
 
 	.prairie-qr-figure figcaption {
-		margin-top: 0.7rem;
+		margin-top: 0.5rem;
 		font-size: 0.8rem;
-		color: #d0d0d0;
-		line-height: 1.6;
+		color: #bcbcbc;
 	}
 
-	.prairie-qr-caption-label {
-		display: block;
-		margin-bottom: 0.15rem;
-		font-size: 0.72rem;
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
-		color: #aaaaaa;
-		opacity: 0.9;
-	}
 
 	/* === La Terre === */
 
@@ -1235,17 +1160,15 @@ permalink: /prairie/
 			label: "",
 			main: `
     <div class="prairie-qr-layout">
-      <div class="prairie-qr-card prairie-qr-card--error">
-        <figure class="prairie-qr-figure">
-          <img
-            src="qr_default_4815162342.png"
-            alt="udrep">
-          <figcaption>
-          Où allez-vous? 
-		  <p>Pensez à fermer la porte en partant.</p>
-		  </figcaption>
-        </figure>
-      </div>
+      <figure class="prairie-qr-figure">
+        <img
+          src="qr_default_4815162342.png"
+          alt="udrep">
+        <figcaption>
+        Où allez-vous? 
+		<p>Pensez à fermer la porte en partant.</p>
+        </figcaption>
+      </figure>
     </div>
   `,
 			secondary: ""
@@ -1256,16 +1179,14 @@ permalink: /prairie/
 			label: "",
 			main: `
     <div class="prairie-qr-layout">
-      <div class="prairie-qr-card prairie-qr-card--success">
-        <figure class="prairie-qr-figure">
-          <img
-            src="qr_found_bienvenue.png"
-            alt="#Bienvenue">
-          <figcaption>
-          Quelque chose a changé, je le vois clairement.
-          </figcaption>
-        </figure>
-      </div>
+      <figure class="prairie-qr-figure">
+        <img
+          src="qr_found_bienvenue.png"
+          alt="#Bienvenue">
+        <figcaption>
+        Quelque chose a changé, je le vois clairement.
+        </figcaption>
+      </figure>
     </div>
   `,
 			secondary: ""

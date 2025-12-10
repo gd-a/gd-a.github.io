@@ -1508,6 +1508,14 @@ permalink: /prairie/
 			});
 		}
 
+		document.addEventListener("click", function (evt) {
+			const btn = evt.target.closest(".prairie-qr-close");
+			if (!btn) return;
+
+			evt.preventDefault();
+			closeJournal();
+		});
+
 		// --- Boot ---
 
 		document.addEventListener("DOMContentLoaded", function () {

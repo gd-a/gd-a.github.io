@@ -34,7 +34,7 @@ permalink: /prairie/
 		</div>
 	</section>
 
-	<!-- Journal simple (fond sombre, mise en page + bouton de fermeture) -->
+	<!-- Journal simple (fond sombre, largeur alignée sur Earth↔Mars) -->
 	<section id="prairie-journal" class="prairie-journal prairie-journal--hidden" aria-live="polite">
 		<header class="prairie-journal-header">
 			<div>
@@ -48,17 +48,10 @@ permalink: /prairie/
 		</header>
 
 		<div class="prairie-journal-layout">
-			<!-- Colonne principale -->
 			<div class="prairie-journal-main">
 				<div id="prairie-journal-main-article" class="prairie-journal-main-article"></div>
 				<div id="prairie-journal-secondary" class="prairie-journal-secondary"></div>
 			</div>
-
-			<!-- Colonne édito -->
-			<aside class="prairie-journal-editorial">
-				<h3 class="prairie-journal-editorial-title">Note</h3>
-				<div id="prairie-journal-editorial-content"></div>
-			</aside>
 		</div>
 	</section>
 </div>
@@ -220,7 +213,7 @@ permalink: /prairie/
 		transform: translate(-50%, -50%) scale(1.06);
 	}
 
-	/* Curseur + pulsations (bordure 1px comme tu l’as mis) */
+	/* Curseur + pulsations (bordure 1px) */
 
 	.prairie-pointer {
 		position: absolute;
@@ -350,8 +343,9 @@ permalink: /prairie/
 	/* === Journal simple === */
 
 	.prairie-journal {
-		max-width: 960px;
-		margin: 4vh auto 8vh;
+		width: 80%;
+		margin: 4vh 10% 8vh;
+		max-width: none;
 		padding: 2rem 2rem 2.5rem;
 		background: #101010;
 		border-radius: 10px;
@@ -373,6 +367,18 @@ permalink: /prairie/
 		margin-bottom: 1.5rem;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 		gap: 1rem;
+	}
+
+	/* Variante Earth : pas de titre ni de barre */
+	.prairie-journal--earth .prairie-journal-header {
+		border-bottom: none;
+		padding-bottom: 0;
+		margin-bottom: 1.5rem;
+	}
+
+	.prairie-journal--earth #prairie-journal-title,
+	.prairie-journal--earth #prairie-journal-date {
+		display: none;
 	}
 
 	.prairie-journal-header h2 {
@@ -409,10 +415,7 @@ permalink: /prairie/
 	}
 
 	.prairie-journal-layout {
-		display: grid;
-		grid-template-columns: minmax(0, 2.5fr) minmax(0, 1fr);
-		column-gap: 2.25rem;
-		row-gap: 1.75rem;
+		display: block;
 	}
 
 	.prairie-journal-main-article {
@@ -438,43 +441,68 @@ permalink: /prairie/
 		margin: 0 0 0.7rem;
 	}
 
-	.prairie-journal-editorial {
-		border-left: 1px solid rgba(255, 255, 255, 0.08);
-		padding-left: 1.4rem;
-		font-size: 0.88rem;
-		line-height: 1.6;
-		color: #c8c8c8;
+	/* === Earth view === */
+
+	.prairie-earth-layout {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 2rem;
 	}
 
-	.prairie-journal-editorial-title {
-		margin: 0 0 0.6rem;
-		font-size: 0.9rem;
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
-		color: #aaaaaa;
-	}
-
-	/* Coordonnées (dot bleu) */
-
-	.prairie-coord-quote {
-		font-size: 1.9rem;
+	.prairie-earth-figure {
+		margin: 0;
+		max-width: 260px;
+		flex: 0 0 auto;
 		text-align: center;
-		font-weight: 500;
-		margin: 0 0 0.75rem;
 	}
 
-	.prairie-coord-quote span {
-		opacity: 0.9;
+	.prairie-earth-figure img {
+		display: block;
+		width: 100%;
+		height: auto;
+		border-radius: 18px;
+		box-shadow: 0 0 18px rgba(0, 0, 0, 0.9);
 	}
 
-	.prairie-coord-legend {
+	.prairie-earth-figure figcaption {
+		margin-top: 0.5rem;
+		font-size: 0.8rem;
+		color: #bcbcbc;
+	}
+
+	.prairie-earth-text {
+		flex: 1 1 220px;
+		position: relative;
+		padding: 1.2rem 1.4rem;
+		border-radius: 16px;
+		background:
+			radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 60%),
+			rgba(255, 255, 255, 0.02);
+		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
+	}
+
+	.prairie-earth-coords {
+		font-size: 1.8rem;
+		line-height: 1.3;
+		margin: 0 0 0.6rem;
+		letter-spacing: 0.06em;
+		text-align: center;
+	}
+
+	.prairie-earth-coords span {
+		opacity: 0.95;
+	}
+
+	.prairie-earth-legend {
+		margin: 0;
 		text-align: center;
 		font-style: italic;
-		color: #c8c8c8;
-		margin: 0 0 1.6rem;
+		font-size: 0.95rem;
+		color: #dcdcdc;
 	}
 
-	/* Fiche Mars (dot rouge) */
+	/* === Mars view === */
 
 	.prairie-mars-layout {
 		display: flex;
@@ -551,19 +579,13 @@ permalink: /prairie/
 	/* Adaptation responsive */
 
 	@media (max-width: 900px) {
-		.prairie-journal-layout {
-			grid-template-columns: 1fr;
-		}
-
-		.prairie-journal-editorial {
-			border-left: none;
-			border-top: 1px solid rgba(255, 255, 255, 0.08);
-			padding-left: 0;
-			padding-top: 1rem;
-		}
-
 		.prairie-mars-columns {
 			grid-template-columns: 1fr;
+		}
+
+		.prairie-earth-layout {
+			flex-direction: column;
+			align-items: stretch;
 		}
 	}
 
@@ -652,22 +674,34 @@ permalink: /prairie/
 
 		// --- Contenu : endpoints spéciaux + jalons classiques ---
 
-		// Endpoints : dot bleu (arrivée) & dot rouge (Mars)
+		// Endpoints : dot bleu (Terre) & dot rouge (Mars)
 		const endpointEntries = {
 			"endpoint-left": {
-				title: "Point d’arrivée",
+				title: "Terre",
 				label: "",
 				main: `
-          <div class="prairie-coord-quote">
-            <span>«&nbsp;48.74782451585052, 2.272479816718329&nbsp;»</span>
+          <div class="prairie-earth-layout">
+            <figure class="prairie-earth-figure">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/900px-The_Earth_seen_from_Apollo_17.jpg"
+                alt="Image de la Terre vue depuis l'espace">
+              <figcaption>
+                La Terre vue par Apollo&nbsp;17 (NASA).
+              </figcaption>
+            </figure>
+            <div class="prairie-earth-text">
+              <p class="prairie-earth-coords">
+                <span>«&nbsp;48.74782451585052, 2.272479816718329&nbsp;»</span>
+              </p>
+              <p class="prairie-earth-legend"><em>Novitas est terra felicitatis</em></p>
+            </div>
           </div>
-          <p class="prairie-coord-legend"><em>Novitas est terra felicitatis</em></p>
         `,
 				secondary: "",
 				editorial: ""
 			},
 			"endpoint-right": {
-				title: "Mars – fiche de mission",
+				title: "Mars",
 				label: "Planète tellurique",
 				main: `
           <div class="prairie-mars-layout">
@@ -973,7 +1007,7 @@ permalink: /prairie/
 			const track = document.getElementById("prairie-track");
 			if (!track) return;
 
-			milestoneConfig.forEach((ms, idx) => {
+			milestoneConfig.forEach((ms) => {
 				const button = document.createElement("button");
 				button.type = "button";
 				button.className = "prairie-milestone";
@@ -993,7 +1027,6 @@ permalink: /prairie/
 		}
 
 		function getEntryById(id) {
-			// Endpoints en priorité
 			if (endpointEntries[id]) return endpointEntries[id];
 			return milestoneConfig.find((m) => m.id === id) || null;
 		}
@@ -1017,9 +1050,8 @@ permalink: /prairie/
 			const dateEl = document.getElementById("prairie-journal-date");
 			const mainEl = document.getElementById("prairie-journal-main-article");
 			const secondaryEl = document.getElementById("prairie-journal-secondary");
-			const editorialEl = document.getElementById("prairie-journal-editorial-content");
 
-			if (!journal || !titleEl || !dateEl || !mainEl || !secondaryEl || !editorialEl) {
+			if (!journal || !titleEl || !dateEl || !mainEl || !secondaryEl) {
 				return;
 			}
 
@@ -1027,7 +1059,6 @@ permalink: /prairie/
 			dateEl.textContent = data.label || "";
 			mainEl.innerHTML = data.main || "";
 			secondaryEl.innerHTML = data.secondary || "";
-			editorialEl.innerHTML = data.editorial || "";
 
 			clearActiveStates();
 
@@ -1048,6 +1079,8 @@ permalink: /prairie/
 				}
 			}
 
+			// Variante Earth : pas de titre/barre
+			journal.classList.toggle("prairie-journal--earth", id === "endpoint-left");
 			journal.classList.remove("prairie-journal--hidden");
 		}
 
@@ -1055,6 +1088,7 @@ permalink: /prairie/
 			const journal = document.getElementById("prairie-journal");
 			if (journal) {
 				journal.classList.add("prairie-journal--hidden");
+				journal.classList.remove("prairie-journal--earth");
 			}
 			clearActiveStates();
 		}

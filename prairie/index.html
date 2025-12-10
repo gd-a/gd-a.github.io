@@ -9,7 +9,7 @@ permalink: /prairie/
 		<h2 id="prairie-heading" class="prairie-sr-only">Progression du trajet Prairie</h2>
 
 		<div class="prairie-track" id="prairie-track" aria-hidden="false">
-			<!-- Bullets for the click puzzle -->
+			<!-- Puces pour Puzzle -->
 			<div id="prairie-bullets" class="prairie-bullets prairie-bullets--hidden" aria-hidden="true">
 				<span class="prairie-bullet" data-bullet="0"></span>
 				<span class="prairie-bullet" data-bullet="1"></span>
@@ -24,7 +24,7 @@ permalink: /prairie/
 			<!-- Portion déjà parcourue en trait plein -->
 			<div class="prairie-line-completed" aria-hidden="true"></div>
 
-			<!-- Extrémités (cliquables) -->
+			<!-- Extrémités -->
 			<div class="prairie-endpoint prairie-endpoint--left" data-entry-id="endpoint-left" role="button"
 				tabindex="0" aria-label="Arrivée"></div>
 
@@ -64,9 +64,9 @@ permalink: /prairie/
 		</div>
 	</section>
 
-	<!-- Footer symbols -->
+	<!-- Pied de page -->
 	<footer class="prairie-footer-symbols" aria-hidden="true">
-		♂ → 🜨
+		♂ → <span class="prairie-footer-earth">🜨</span>
 	</footer>
 </div>
 
@@ -83,7 +83,7 @@ permalink: /prairie/
 		color: #dddddd;
 	}
 
-	/* Masquer le H1 injecté par le layout et l’ancien titre visible */
+	/* Masquer le H1 injecté par Jekkyl et l’ancien titre visible */
 	main h1,
 	.page-title,
 	.prairie-title,
@@ -128,7 +128,7 @@ permalink: /prairie/
 		z-index: 3;
 	}
 
-	/* Bullets for puzzle */
+	/* Puces pour Puzzle */
 
 	.prairie-bullets {
 		position: absolute;
@@ -376,6 +376,12 @@ permalink: /prairie/
 		background: #f9ebcf;
 	}
 
+	.prairie-root--locked .prairie-endpoint,
+	.prairie-root--locked .prairie-milestone {
+		pointer-events: none;
+		cursor: default;
+	}
+
 	/* Légende */
 
 	.prairie-legend {
@@ -424,7 +430,7 @@ permalink: /prairie/
 		gap: 1rem;
 	}
 
-	/* Variant: no header (Earth + secret hashes) */
+	/* Variante sans en-tête */
 
 	.prairie-journal--noheader .prairie-journal-header {
 		border-bottom: none;
@@ -493,7 +499,34 @@ permalink: /prairie/
 		color: #d0d0d0;
 	}
 
-	/* === Earth view (as before) === */
+	/* QR code */
+
+	.prairie-qr-layout {
+		display: flex;
+		justify-content: center;
+	}
+
+	.prairie-qr-figure {
+		margin: 0 auto;
+		max-width: 260px;
+		text-align: center;
+	}
+
+	.prairie-qr-figure img {
+		display: block;
+		width: 100%;
+		height: auto;
+		border-radius: 18px;
+		box-shadow: 0 0 18px rgba(0, 0, 0, 0.9);
+	}
+
+	.prairie-qr-figure figcaption {
+		margin-top: 0.5rem;
+		font-size: 0.8rem;
+		color: #bcbcbc;
+	}
+
+	/* === La Terre === */
 
 	.prairie-earth-layout {
 		display: flex;
@@ -554,7 +587,7 @@ permalink: /prairie/
 		color: #dcdcdc;
 	}
 
-	/* === Mars view (as before) === */
+	/* === Mars === */
 
 	.prairie-mars-layout {
 		display: flex;
@@ -628,14 +661,20 @@ permalink: /prairie/
 		white-space: nowrap;
 	}
 
-	/* Footer symbols */
+	/* Pied de page */
 
 	.prairie-footer-symbols {
 		margin: 3rem 0 2rem;
+		margin-top: auto;
 		text-align: center;
 		font-size: 0.85rem;
-		color: #444444;
+		color: #333333;
 		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	}
+
+	.prairie-footer-earth {
+		display: inline-block;
+		font-size: 1.5em;
 	}
 
 	/* Responsive */
@@ -676,10 +715,10 @@ permalink: /prairie/
 
 		const startDate = utcDate(2025, 9, 1);  // 1er septembre 2025
 		const endDate = utcDate(2026, 6, 1);    // 1er juin 2026
-		const totalDistanceKm = 349.73e6;
+		const totalDistanceKm = 349.73e6;		// distance Terre-Mars fin août
 
 		const USE_MANUAL_DATE = false;
-		const MANUAL_DATE = utcDate(2025, 12, 6); // exemple
+		const MANUAL_DATE = utcDate(2025, 12, 31); // exemple
 
 		const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
 			day: "numeric",
@@ -729,7 +768,7 @@ permalink: /prairie/
 				" millions de km";
 		}
 
-		// --- Entries ---
+		// --- Articles ---
 
 		const lorem = "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>";
 
@@ -1053,7 +1092,7 @@ permalink: /prairie/
 			}
 		};
 
-		// Secret entries for hashes
+		// Articles secrets (dièse)
 		const secretDefault = {
 			title: "",
 			label: "",
@@ -1086,8 +1125,43 @@ permalink: /prairie/
 
 		const secretEntries = {
 			"4815162342": secretDefault,
-			"4815162343": secretDefault,  // alias, just in case
 			"bienvenue": secretBienvenue
+		};
+
+		const qrEntryWrong = {
+			title: "",
+			label: "",
+			main: `
+    <div class="prairie-qr-layout">
+      <figure class="prairie-qr-figure">
+        <img
+          src="qr_default_4815162342.png"
+          alt="udrep">
+        // <figcaption>
+        //   Scannez ce code avec votre téléphone.
+        // </figcaption>
+      </figure>
+    </div>
+  `,
+			secondary: ""
+		};
+
+		const qrEntryCorrect = {
+			title: "",
+			label: "",
+			main: `
+    <div class="prairie-qr-layout">
+      <figure class="prairie-qr-figure">
+        <img
+          src="qr_found_bienvenue.png"
+          alt="#Bienvenue">
+        // <figcaption>
+        //   Quick-Response CODE.
+        // </figcaption>
+      </figure>
+    </div>
+  `,
+			secondary: ""
 		};
 
 		function getEntryById(id) {
@@ -1128,6 +1202,12 @@ permalink: /prairie/
 		}
 
 		function closeJournal() {
+			if (huntCompleted) {
+				// Après une séquence de 5 clics, recharger le site à la fermeture de l'article
+				window.location.href = "{{ site.baseurl }}/prairie";
+				return;
+			}
+
 			const journal = document.getElementById("prairie-journal");
 			if (journal) {
 				journal.classList.add("prairie-journal--hidden");
@@ -1136,13 +1216,37 @@ permalink: /prairie/
 			clearActiveStates();
 		}
 
-		// --- Bullets / hunt logic ---
+
+		// --- Puzzle ---
 
 		const bulletsEl = document.getElementById("prairie-bullets");
 		let clickCount = 0;
 		let clickSequence = [];
 
-		// Right-to-left chronological order:
+		let huntCompleted = false;
+
+		function deactivateInteractions() {
+			huntCompleted = true;
+
+			const root = document.querySelector(".prairie-root");
+			if (root) {
+				root.classList.add("prairie-root--locked");
+			}
+
+			document
+				.querySelectorAll(".prairie-endpoint, .prairie-milestone")
+				.forEach((el) => {
+					el.setAttribute("aria-disabled", "true");
+
+					if (el.tagName === "BUTTON") {
+						el.disabled = true; // Les jalons sont actifs
+					} else {
+						el.setAttribute("tabindex", "-1"); // Les extrémités sont div[role="button"]
+					}
+				});
+		}
+
+		// Ordre chronologique (droite à gauche):
 		// Mars → 26/09/2025 → 01/12/2025 → 11/02/2026 → Earth
 		const targetOrder = [
 			"endpoint-right",
@@ -1169,20 +1273,23 @@ permalink: /prairie/
 			});
 		}
 
+
 		function updateBullets() {
 			if (!bulletsEl) return;
 			const bullets = bulletsEl.querySelectorAll(".prairie-bullet");
 
-			// After first click: all bullets armed (border visible)
+			// Après le premier clic, toutes les puces apparaissent
 			bullets.forEach(b => b.classList.add("prairie-bullet--armed"));
 
-			// Turn on up to clickCount
+			// suivi des activations
 			bullets.forEach((b, idx) => {
 				b.classList.toggle("prairie-bullet--on", idx < clickCount);
 			});
 		}
 
 		function registerClick(entryId) {
+			if (huntCompleted) return false;
+
 			if (clickCount === 0) {
 				setBulletsVisible(true);
 			}
@@ -1196,11 +1303,11 @@ permalink: /prairie/
 					clickSequence.length === targetOrder.length &&
 					clickSequence.every((id, i) => id === targetOrder[i]);
 
-				const nextHash = isCorrect ? "#bienvenue" : "#4815162342";
-				window.location.hash = nextHash;
+				// Affichage du QR code
+				const qrData = isCorrect ? qrEntryCorrect : qrEntryWrong;
 
-				// reset immediately for the next hunt
-				resetHunt();
+				deactivateInteractions();
+				openJournalWith(qrData, { noHeader: true });
 
 				return true;
 			}
@@ -1208,7 +1315,8 @@ permalink: /prairie/
 			return false;
 		}
 
-		// --- Hash handling for QR / secret routes ---
+
+		// --- Les secrets dièses ---
 
 		function openFromHash() {
 			const raw = (window.location.hash || "").replace(/^#/, "");
@@ -1221,21 +1329,23 @@ permalink: /prairie/
 			openJournalWith(secret, { noHeader: true });
 		}
 
-		// --- Click handling for Earth/Mars/milestones ---
+		// --- Gestion des clics (désactivation/activation) ---
 
 		function handleEntryClick(entryId) {
+			if (huntCompleted) return;
+
 			const revealed = registerClick(entryId);
-			if (revealed) return; // hashchange will open secret entry
+			if (revealed) return; // QR visible
 
 			const data = getEntryById(entryId);
 			if (!data) return;
 
-			const noHeader = (entryId === "endpoint-left"); // Earth has no header
+			const noHeader = (entryId === "endpoint-left");
 			openJournalWith(data, { noHeader });
 
 			clearActiveStates();
 
-			// highlight active on the bar
+			// Suivi du jalon visible
 			const milestoneEl = document.querySelector(
 				'.prairie-milestone[data-entry-id="' + entryId + '"]'
 			);
@@ -1250,6 +1360,7 @@ permalink: /prairie/
 				endpointEl.classList.add("prairie-endpoint--active");
 			}
 		}
+
 
 		function attachEndpointHandlers() {
 			["endpoint-left", "endpoint-right"].forEach((id) => {

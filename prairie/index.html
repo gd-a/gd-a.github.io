@@ -523,8 +523,6 @@ permalink: /prairie/
 
 	/* QR code */
 
-	/* QR code – simple, toned down */
-
 	.prairie-qr-layout {
 		display: flex;
 		justify-content: center;
@@ -535,10 +533,7 @@ permalink: /prairie/
 		margin: 0 auto;
 		max-width: 260px;
 		text-align: center;
-		padding: 0.6rem;
-		border-radius: 16px;
-		background: rgba(255, 255, 255, 0.02);
-		box-shadow: 0 12px 24px rgba(0, 0, 0, 0.8);
+		position: relative;
 	}
 
 	.prairie-qr-figure img {
@@ -546,8 +541,8 @@ permalink: /prairie/
 		width: 100%;
 		height: auto;
 		border-radius: 12px;
-		/* soften the harsh black/white without breaking scanability */
-		filter: brightness(0.9) contrast(0.9);
+		/* soften pure black/white slightly */
+		filter: brightness(0.88) contrast(0.88);
 		image-rendering: crisp-edges;
 	}
 
@@ -555,6 +550,31 @@ permalink: /prairie/
 		margin-top: 0.5rem;
 		font-size: 0.8rem;
 		color: #bcbcbc;
+	}
+
+	.prairie-qr-close {
+		position: absolute;
+		top: -0.6rem;
+		right: -0.6rem;
+		width: 26px;
+		height: 26px;
+		border-radius: 50%;
+		border: 1px solid rgba(255, 255, 255, 0.8);
+		background: rgba(0, 0, 0, 0.85);
+		color: #f5f5f5;
+		cursor: pointer;
+		font-size: 1rem;
+		line-height: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+	}
+
+	.prairie-qr-close:hover,
+	.prairie-qr-close:focus-visible {
+		background: rgba(255, 255, 255, 0.08);
+		color: #ffffff;
 	}
 
 
@@ -1167,11 +1187,16 @@ permalink: /prairie/
 			main: `
     <div class="prairie-qr-layout">
       <figure class="prairie-qr-figure">
+        <button type="button"
+                class="prairie-qr-close"
+                aria-label="Fermer ce message">
+          ×
+        </button>
         <img
           src="qr_default_4815162342.png"
           alt="udrep">
         <figcaption>
-		Pensez à fermer la porte en partant.
+          Pensez à fermer la porte en partant.
         </figcaption>
       </figure>
     </div>
@@ -1185,11 +1210,16 @@ permalink: /prairie/
 			main: `
     <div class="prairie-qr-layout">
       <figure class="prairie-qr-figure">
+        <button type="button"
+                class="prairie-qr-close"
+                aria-label="Fermer ce message">
+          ×
+        </button>
         <img
           src="qr_found_bienvenue.png"
           alt="#bienvenue">
         <figcaption>
-        Quelque chose a changé, je le vois clairement.
+          Quelque chose a changé,<br>je le vois clairement.
         </figcaption>
       </figure>
     </div>

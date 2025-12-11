@@ -691,6 +691,17 @@ permalink: /prairie/
 		color: #dcdcdc;
 	}
 
+	.prairie-earth-voyager {
+		margin-top: 0.4rem;
+		font-size: 0.85rem;
+		color: #d0d0d0;
+	}
+
+	.prairie-earth-voyager span {
+		font-weight: 500;
+	}
+
+
 	/* === Mars === */
 
 	.prairie-mars-layout {
@@ -961,7 +972,18 @@ permalink: /prairie/
               <p class="prairie-earth-coords">
                 <span>48.74782451585052, 2.272479816718329</span>
               </p>
-              <p class="prairie-earth-legend"><em>Novitas est terra felicitatis</em></p>
+              <p class="prairie-earth-legend">
+                <em>Novitas est terra felicitatis</em>
+              </p>
+              <p class="prairie-earth-voyager">
+  Vous n’êtes pas le premier voyageur, il est passé il y a
+  <span
+    id="prairie-voyager-lighttime"
+    data-base-lighttime="23:36:29"
+    data-ref-iso="2025-12-12T00:00:00Z"
+  >23:36:29</span>.
+</p>
+
             </div>
           </div>
         `,
@@ -1324,6 +1346,53 @@ permalink: /prairie/
 			return milestoneConfig.find(m => m.id === id) || null;
 		}
 
+		function prairieParseHms(str) {
+			const m = str.trim().match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+			if (!m) return null;
+			const h = parseInt(m[1], 10);
+			const min = parseInt(m[2], 10);
+			const s = parseInt(m[3], 10);
+			return h * 3600 + min * 60 + s;
+		}
+
+		function prairieFormatHms(totalSeconds) {
+			const s = ((totalSeconds % 60) + 60) % 60;
+			const totalMinutes = (totalSeconds - s) / 60;
+			const m = ((totalMinutes % 60) + 60) % 60;
+			const h = (totalMinutes - m) / 60;
+
+			const pad = (n) => n.toString().padStart(2, "0");
+			return pad(h) + ":" + pad(m) + ":" + pad(s);
+		}
+
+		function updateVoyagerLighttime() {
+			const span = document.getElementById("prairie-voyager-lighttime");
+			if (!span) return;
+
+			const baseStr = span.dataset.baseLighttime || span.textContent.trim();
+			const baseSeconds = prairieParseHms(baseStr);
+			if (baseSeconds == null) return;
+
+			const refIso = span.dataset.refIso || "2025-12-12T00:00:00Z";
+			const t0 = new Date(refIso);
+			const now = new Date();
+
+			const elapsedSeconds = (now.getTime() - t0.getTime()) / 1000;
+
+			// Approximation:
+			// Voyager 1 s'éloigne à ~3.6 AU/an (NASA), et 1 AU ≈ 499.0048 s-lumière.
+			// => Δ(temps-lumière) ≈ 3.6 * 499.0048 ≈ 1796.4 s/an
+			const SECONDS_PER_YEAR = 365.25 * 24 * 3600;
+			const lightSecondsPerYear = 1796.417; // pré-calculé
+			const dLt_dt = lightSecondsPerYear / SECONDS_PER_YEAR; // s de temps-lumière / s de temps réel
+
+			const deltaLightSeconds = elapsedSeconds * dLt_dt;
+			const totalSeconds = Math.floor(baseSeconds + deltaLightSeconds);
+
+			span.textContent = prairieFormatHms(totalSeconds);
+		}
+
+
 		// --- Journal UI helpers ---
 
 		function clearActiveStates() {
@@ -1524,8 +1593,6 @@ permalink: /prairie/
 			return true;
 		}
 
-
-
 		// --- Les secrets dièses ---
 
 		function openFromHash() {
@@ -1634,6 +1701,13 @@ permalink: /prairie/
 			resetHunt();
 			openFromHash();
 			window.addEventListener("hashchange", openFromHash);
+
+			// Met à jour le temps-lumière de Voyager 1
+			updateVoyagerLighttime();
+
+			// Optionnel : rafraîchir environ toutes les heures
+			setInterval(updateVoyagerLighttime, 60 * 60 * 1000);
 		});
+
 	})();
 </script>

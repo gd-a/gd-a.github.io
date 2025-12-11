@@ -174,6 +174,22 @@ permalink: /prairie/
 		background: transparent;
 		border: 1px solid transparent;
 		box-shadow: 0 0 10px rgba(255, 255, 255, 0.06);
+
+		/* NEW: start hidden + slightly shrunken */
+		opacity: 0;
+		transform: scale(0.4);
+		transition:
+			opacity 0.35s ease,
+			transform 0.35s ease,
+			background-color 0.35s ease,
+			border-color 0.35s ease,
+			box-shadow 0.35s ease;
+	}
+
+	bu .prairie-bullet--armed,
+	.prairie-bullet--on {
+		opacity: 1;
+		transform: scale(1);
 	}
 
 	.prairie-bullet--armed {
@@ -1342,10 +1358,24 @@ permalink: /prairie/
 		// --- Puzzle ---
 
 		const bulletsEl = document.getElementById("prairie-bullets");
-		let clickCount = 0;
-		let clickSequence = [];
+
+		// Carto des entrées: id → index (0 = gauche, 4 = droite)
+		const bulletIndexByEntryId = {
+			"endpoint-right": 0,    // Mars (à droite donc à guache)
+			"ms-2025-09-26": 1,     // milestone 1
+			"ms-2025-12-01": 2,     // milestone 2
+			"ms-2026-02-11": 3,     // milestone 3
+			"endpoint-left": 4      // Earth (à gauche donc à droite)
+		};
+
+		// Puzzle state
+		let bulletActive = {};      // entryId -> true/false
+		let bulletLastOnStep = {};  // entryId -> dernier ordre (for sequencing)
+		let activationStep = 0;     // compteur global des allumages
+		let bulletsWereShown = false;
 
 		let huntCompleted = false;
+
 
 		function deactivateInteractions() {
 			huntCompleted = true;
@@ -1383,59 +1413,85 @@ permalink: /prairie/
 			bulletsEl.classList.toggle("prairie-bullets--hidden", !visible);
 			bulletsEl.classList.toggle("prairie-bullets--visible", visible);
 			bulletsEl.setAttribute("aria-hidden", visible ? "false" : "true");
+			bulletsWereShown = visible;
 		}
+
 
 		function resetHunt() {
-			clickCount = 0;
-			clickSequence = [];
+			bulletActive = {};
+			bulletLastOnStep = {};
+			activationStep = 0;
+			huntCompleted = false;
 			setBulletsVisible(false);
+
 			if (!bulletsEl) return;
-			bulletsEl.querySelectorAll(".prairie-bullet").forEach(b => {
+			bulletsEl.querySelectorAll(".prairie-bullet").forEach((b) => {
 				b.classList.remove("prairie-bullet--armed", "prairie-bullet--on");
-			});
-		}
-
-
-		function updateBullets() {
-			if (!bulletsEl) return;
-			const bullets = bulletsEl.querySelectorAll(".prairie-bullet");
-
-			// Après le premier clic, toutes les puces apparaissent
-			bullets.forEach(b => b.classList.add("prairie-bullet--armed"));
-
-			// suivi des activations
-			bullets.forEach((b, idx) => {
-				b.classList.toggle("prairie-bullet--on", idx < clickCount);
 			});
 		}
 
 		function registerClick(entryId) {
 			if (huntCompleted) return false;
 
-			if (clickCount === 0) {
+			const bulletIndex = bulletIndexByEntryId[entryId];
+			if (typeof bulletIndex === "undefined") {
+				return false;
+			}
+
+			if (!bulletsWereShown) {
 				setBulletsVisible(true);
 			}
 
-			clickCount += 1;
-			clickSequence.push(entryId);
-			updateBullets();
+			if (!bulletsEl) return false;
 
-			if (clickCount >= 5) {
-				const isCorrect =
-					clickSequence.length === targetOrder.length &&
-					clickSequence.every((id, i) => id === targetOrder[i]);
+			const bulletEl = bulletsEl.querySelector(
+				'.prairie-bullet[data-bullet="' + bulletIndex + '"]'
+			);
+			if (!bulletEl) return false;
 
-				// Affichage du QR code
-				const qrData = isCorrect ? qrEntryCorrect : qrEntryWrong;
+			const isCurrentlyOn = bulletEl.classList.contains("prairie-bullet--on");
 
-				deactivateInteractions();
-				openJournalWith(qrData, { noHeader: true, qr: true });
-
-				return true;
+			if (isCurrentlyOn) {
+				// Second clic: toggle OFF (fade-out)
+				bulletEl.classList.remove("prairie-bullet--on", "prairie-bullet--armed");
+				bulletActive[entryId] = false;
+				bulletLastOnStep[entryId] = null;
+			} else {
+				// Premier (or re-premier) clic: toggle ON (fade-in)
+				bulletEl.classList.add("prairie-bullet--armed", "prairie-bullet--on");
+				activationStep += 1;
+				bulletActive[entryId] = true;
+				bulletLastOnStep[entryId] = activationStep;
 			}
 
-			return false;
+			// Combien sont actives?
+			const activeIds = Object.keys(bulletActive).filter((id) => bulletActive[id]);
+
+			// On termine seulement si 5 le sont
+			if (activeIds.length < targetOrder.length) {
+				return false;
+			}
+
+			// Quelle séquence?
+			const sequence = activeIds
+				.slice()
+				.sort(
+					(a, b) =>
+						(bulletLastOnStep[a] || 0) - (bulletLastOnStep[b] || 0)
+				);
+
+			const isCorrect =
+				sequence.length === targetOrder.length &&
+				sequence.every((id, i) => id === targetOrder[i]);
+
+			const qrData = isCorrect ? qrEntryCorrect : qrEntryWrong;
+
+			deactivateInteractions();
+			openJournalWith(qrData, { noHeader: true, qr: true });
+
+			return true;
 		}
+
 
 
 		// --- Les secrets dièses ---
